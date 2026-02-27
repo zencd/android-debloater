@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>APK Debloater</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>📱</text></svg>">
+<link rel="stylesheet" href="/main.css">
+<script src="https://unpkg.com/@popperjs/core@2"></script> <!--required for tippy-->
+<script src="https://unpkg.com/tippy.js@6"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.js" integrity="sha512-79j1YQOJuI8mLseq9icSQKT6bLlLtWknKwj1OpJZMdPt2pFBry3vQTt+NZuJw7NSd1pHhZlu0s12Ngqfa371EA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.6.1/toastify.min.css" integrity="sha512-UiKdzM5DL+I+2YFxK+7TDedVyVm7HMp/bN85NeWMJNYortoll+Nd6PU9ZDrZiaOsdarOyk9egQm6LOJZi36L2g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<script>var gLang = window.localStorage.getItem('appLang') || 'en'; document.write(`<body data-lang="${gLang}">\n`);</script>
+<main class="container">
+  <h2 class="topNav">
+    <a id="menuDebloat" data-tab="debloat" class="current">⊖ <en>Debloat</en><ru>Пакеты</ru></a>
+    &nbsp;
+    <a id="menuInstall" data-tab="backup">⊕ <en>Backup</en><ru>Бэкап</ru></a>
+    &nbsp;
+    <a data-tab="settings"><en>Settings</en><ru>Настройки</ru></a>
+    &nbsp;
+    <span id="deviceTitle"><en>No device</en><ru>Нет девайса</ru></span>
+  </h2>
+  <!--Tab Debloat-->
+  <div class="topNavTab" id="tabDebloat" data-tab="debloat">
+    <div class="actions">
+      <button id="reloadUserPrefs" title="Reload list of device packages" data-tr="Перечитать список пакетов с устройства"><span class="icon-scale">⟳</span></button>
+      <button id="copyDebloatPackages" title="Copy package names shown" data-tr="Копировать имена выбранных пакетов"><span class="icon-scale-1">⧉</span></button>
+      <button id="loadUad" title="Update list of known bloatware from Github" data-tr="Обновить каталог мусорного ПО с гитхаба">
+        <en>⇓ Bloatware</en>
+        <ru>⇓ Мусор</ru>
+      </button>
+      <button id="readAppMeta" title="Read app titles/icons from connected device" data-tr="Вытащить названия приложений и иконки. Первый раз придётся подождать"><en>⇓ Meta</en><ru>⇓ Инфо</ru></button>
+      <select name="" id="packageFilter" title="Package filtering" data-tr="Фильтр пакетов">
+        <optgroup label="This device / Safety" data-tr="Девайс / Безопасность">
+          <option value="deviceSafe" data-tr="📱Безопасно удалять">📱Safe to debloat</option>
+          <option value="deviceAdvanced" data-tr="📱Менее безопасно">📱Less safe</option>
+          <option value="deviceAllBloatware" data-tr="📱Весь &quot;мусор&quot;">📱All bloatware</option>
+        </optgroup>
+        <optgroup label="This device / Status" data-tr="Девайс / Статус">
+          <option value="deviceEnabled" data-tr="📱Активные">📱Enabled</option>
+          <option value="deviceDisabled" data-tr="📱Отключённые">📱Disabled</option>
+          <option value="deviceUninstalled" data-tr="📱Удалённые">📱Uninstalled</option>
+        </optgroup>
+        <optgroup label="This device / Misc" data-tr="Девайс / Разное">
+          <option value="deviceNonBloatware" data-tr="📱Без описания">📱No description</option>
+          <option value="deviceUserInstalled" data-tr="📱Пользовательские">📱User-installed</option>
+          <option value="deviceDebloat" data-tr="📱К удалению">📱To debloat</option>
+        </optgroup>
+        <optgroup label="All devices:" data-tr="Любые девайсы:">
+          <option value="keep" data-tr="Хочу сохранить">All to keep</option>
+          <option value="unsure" data-tr="На проверке">All to review</option>
+          <option value="del" data-tr="Хочу удалить">All to debloat</option>
+        </optgroup>
+      </select>
+      <button id="deleteUnwanted" class="primary" title="Uninstall or disable packages marked as 'Debloat'" data-tr="Очистить устройство от &quot;мусора&quot;"><en>✖ Debloat</en><ru>✖ Очистить</ru></button>
+    </div>
+    <br>
+    <div class="usage" data-lang="en">
+      Using this section:
+      <ol>
+        <li>Connect your Android device to the PC
+        <li>In the package filter, select "Safe to debloat"
+        <li>Mark unnecessary packages as "Debloat"
+        <li>Click the "Debloat" button
+      </ol>
+      Preparing Android:
+      <ol>
+        <li>Become a developer, tapping a lot of times on the OS version
+        <li>Developer options:
+          <ul>
+            <li>Enable 'USB debugging'
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <div class="usage" data-lang="ru">
+      Использование этого раздела:
+      <ol>
+        <li>Подключите Android-устройство к ПК
+        <li>В фильтре пакетов выберите "Безопасно удалять"
+        <li>Пометьте лишние пакеты как "Удалить"
+        <li>Нажмите кнопку "Очистить"
+      </ol>
+      Подготовка Android:
+      <ol>
+        <li>Станьте разработчиком, многократно нажав на версию ОС
+        <li>Параметры разработчика:
+          <ul>
+            <li>Включите "Отладка по USB"
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <section class="cards"></section>
+  </div>
+  <!--Tab Backup-->
+  <div class="topNavTab" id="tabInstall" data-tab="backup" style="display: none">
+    <div class="actions">
+      <button id="reloadApps" title="Reload list of user-installed apps" data-tr="Перечитать список пользовательских приложений с устройства"><span class="icon-scale">⟳</span></button>
+      <button id="copyAppNames" title="Copy package names" data-tr="Копировать имена приложений"><span class="icon-scale-1">⧉</span></button>
+      <select name="" id="backupMenu" title="Backup menu" data-tr="Бэкап приложений на ПК">
+        <option value="" data-tr="⇓ Бэкап">⇓ Backup</option>
+        <option value="backupApps" data-tr="Приложения">Apps</option>
+        <option value="backupPermissions" data-tr="Разрешения">Permissions</option>
+      </select>
+      <select name="" id="restoreMenu" class="primary" title="Restoration menu" data-tr="Восстановление приложений с ПК">
+        <option value="" data-tr="⇑ Восстановление">⇑ Restore</option>
+        <option value="restoreApps" data-tr="Приложения">Apps</option>
+        <option value="restorePermissions" data-tr="Разрешения">Permissions</option>
+      </select>
+    </div>
+    <div class="usage" data-lang="en">
+      <br>
+      Using this section:
+      <ol>
+        <li>Connect your Android device #1 to the PC
+        <li>Click menu "Backup / Apps"
+        <li>Connect your Android device #2 to the PC
+        <li>Refresh page
+        <li>Click menu "Restore / Apps"
+      </ol>
+      Preparing Android:
+      <ol>
+        <li>Developer options:
+          <ul>
+            <li>Enable "USB Debugging Security Settings" (Xiaomi)
+            <li>Enable "Install via USB" (Xiaomi)
+            <li>Disable permission monitoring (Color/Oxygen)
+            <li>You may be required to insert a SIM (Xiaomi)
+            <li>You will be required to confirm every app install (Xiaomi)
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <div class="usage" data-lang="ru">
+      <br>
+      Использование этого раздела:
+      <ol>
+        <li>Подключите к ПК Android-устройство №1
+        <li>Нажмите пункт меню "Бэкап / Приложения"
+        <li>Обновите страницу
+        <li>Подключите к ПК Android-устройство №2
+        <li>Нажмите пункт меню "Восстановление / Приложения"
+      </ol>
+      Подготовка Android:
+      <ol>
+        <li>Параметры разработчика:
+          <ul>
+            <li>Включите "Отладка по USB, Настройки безопасности" (Xiaomi)
+            <li>Включите "Установку через USB" (Xiaomi)
+            <li>Отключите мониторинг разрешений (Color/Oxygen)
+            <li>Может потребоваться вставить SIM-карту (Xiaomi)
+            <li>Установка каждого приложения из бэкапа потребует подтверждения на девайсе (Xiaomi)
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <ol id="localAppsList"></ol>
+  </div>
+  <!--Tab Settings-->
+  <div class="topNavTab" id="tabSettings" data-tab="settings" style="display: none">
+    <div>
+      <en>Language:</en>
+      <ru>Язык:</ru>
+    </div>
+    <div>
+      <select id="appLangSelect" onchange="onLanguageChange(event, this)">
+        <option value="en">English / Английский</option>
+        <option value="ru">Russian / Русский</option>
+      </select>
+    </div>
+    <br>
+    <div>
+      <en>User bloatware list:</en>
+      <ru>Пользовательские предпочтения по пакетам:</ru>
+    </div>
+    <div class="userDebloatFile">-</div>
+    <br>
+    <div>
+      <en>Where we store apks and permissions:</en>
+      <ru>Куда сохраняются apk и разрешения:</ru>
+    </div>
+    <div class="appProfileFolder">-</div>
+    <br>
+    <div>
+      <en>Community's bloatware list, local:</en>
+      <ru>Список "мусорного" ПО, локальный:</ru>
+    </div>
+    <div class="communityDebloatFile">-</div>
+    <br>
+    <div>
+      <en>Community's bloatware list, source:</en>
+      <ru>Список "мусорного" ПО, источник:</ru>
+    </div>
+    <div class="communityDebloatUrl">-</div>
+    <br>
+    <div>
+      <en>Audit log file:</en>
+      <ru>Лог аудита:</ru>
+    </div>
+    <div class="auditFile">-</div>
+    <br>
+    <div>
+      <en>App icons cache:</en>
+      <ru>Иконки приложений:</ru>
+    </div>
+    <div class="iconCacheFolder">-</div>
+    <br>
+    <div>
+      Python <span class="pythonVersion"></span>:
+    </div>
+    <div class="venv">-</div>
+    <br>
+    <div>
+      <en>Source code:</en>
+      <ru>Исходный код:</ru>
+    </div>
+    <div class="appRepo">-</div>
+  </div>
+</main>
+<div id="loader-overlay" class="hidden">
+  <div class="spinner"></div>
+</div>
+</body>
+<script type="text/javascript" src="main.js"></script>
+<script>
+</script>
+</html>
