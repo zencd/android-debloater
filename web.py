@@ -610,6 +610,7 @@ def backup_apks_for_package(package: str) -> bool:
             ensure_dir(APKS_DIR)
             if final_app_folder.exists():
                 shutil.rmtree(final_app_folder)
+            os.chdir(cwd_before)
             shutil.move(tmp_dir, final_app_folder)
         finally:
             os.chdir(cwd_before)
