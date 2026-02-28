@@ -612,6 +612,9 @@ def backup_apks():
                 if apk_paths := list_device_apk_paths(package):
                     tmp_app_folder = APP_START_DIR / 'tmp'  # todo use a random folder
                     if tmp_app_folder.exists():
+                        # todo fails on windows: file is busy
+                        # todo fails on windows: file is busy
+                        # todo fails on windows: file is busy
                         shutil.rmtree(tmp_app_folder)
                     tmp_app_folder.mkdir()
                     os.chdir(tmp_app_folder)
@@ -964,6 +967,9 @@ def serve_read_device_apps_meta(request, response):
 
             tmp_app_folder = APP_START_DIR / 'tmp'  # todo use a random folder
             if tmp_app_folder.exists():
+                # todo fails on windows: file is busy
+                # todo fails on windows: file is busy
+                # todo fails on windows: file is busy
                 shutil.rmtree(tmp_app_folder)
             tmp_app_folder.mkdir()
             os.chdir(tmp_app_folder)
@@ -1188,12 +1194,15 @@ class MyWebHandler(BaseHTTPRequestHandler):
 
 
 def main_vanilla():
-    server = ThreadingHTTPServer((HOST, PORT), MyWebHandler)
-    url = f'http://{HOST}:{PORT}/'
-    print(f'Web server starting: {url}')
-    if not DEBUG:
-        open_browser(url)
-    server.serve_forever()
+    try:
+        server = ThreadingHTTPServer((HOST, PORT), MyWebHandler)
+        url = f'http://{HOST}:{PORT}/'
+        print(f'Web server starting: {url}')
+        if not DEBUG:
+            open_browser(url)
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print('Bye')
 
 
 if __name__ == '__main__':
