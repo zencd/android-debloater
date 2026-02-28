@@ -86,7 +86,7 @@ class JsonDB:
 
     def load(self):
         if self.path.exists():
-            with open(self.path) as fd:
+            with open(self.path, encoding='utf-8') as fd:
                 try:
                     data = json.load(fd)
                 except JSONDecodeError as e:
@@ -101,7 +101,7 @@ class JsonDB:
     def dump(self):
         # todo write to a temp file first, bcs once I lost file content after ctrl+C
         assert self.data is not None
-        with open(self.path, 'w') as fd:
+        with open(self.path, 'w', encoding='utf-8') as fd:
             json.dump(self.data, fp=fd, ensure_ascii=False, indent=2)
 
 
@@ -230,13 +230,13 @@ def ensure_dir(path: Path):
 
 
 def read_file(fname):
-    with open(fname, 'r') as fd:
+    with open(fname, 'r', encoding='utf-8') as fd:
         return fd.read()
 
 
 def write_file(fname, content):
     ensure_dir(fname.parent)
-    with open(fname, 'w') as fd:
+    with open(fname, 'w', encoding='utf-8') as fd:
         fd.write(content)
 
 
@@ -264,13 +264,13 @@ def exec_(cmd: list, stdout: Optional[int] = subprocess.PIPE, stderr: Optional[i
 
 def load_json(fname, fallback):
     if os.path.exists(fname):
-        with open(fname) as fd:
+        with open(fname, encoding='utf-8') as fd:
             return json.load(fd)
     return fallback
 
 
 def read_text_lines(fname):
-    with open(fname) as fd:
+    with open(fname, encoding='utf-8') as fd:
         return fd.readlines()
 
 
@@ -395,7 +395,7 @@ def dump_resolutions(out_file: Path, resolutions: ResolutionList):
                 else others
             list_.append(r)
         groups = [debloat, keep, review, others]
-        with open(temp_file.name, 'w') as fp:
+        with open(temp_file.name, 'w', encoding='utf-8') as fp:
             for group in groups:
                 for r in sorted(group, key=lambda x: x.package):
                     print(resolution_to_str(r), file=fp)
@@ -656,7 +656,7 @@ def backup_permissions():
                 grant_str = 'grant' if granted else 'revoke'
                 out_lines.append(f'{package}  {perm.ljust(perm_max)}  {grant_str}')
                 perm_cnt += 1
-    with open(perm_file, 'w') as fd:
+    with open(perm_file, 'w', encoding='utf-8') as fd:
         fd.write('\n'.join(sorted(out_lines)))
     print(f'Rewritten {perm_file}')
     return perm_cnt
@@ -726,10 +726,10 @@ def restore_apps():
 
 
 def parse_perm_file(f: Path):
-    with open(f) as fd:
+    with open(f, encoding='utf-8') as fd:
         for line in fd:
             line = line.strip()
-            words = re.split('\s+', line)
+            words = re.split(r'\s+', line)
             if len(words) >= 3:
                 package = words[0]
                 perm = words[1]
@@ -1023,7 +1023,7 @@ def serve_read_device_apps_meta(request, response):
 
 
 def static_file(fname, root='.'):
-    with open(fname) as fd:
+    with open(fname, encoding='utf-8') as fd:
         return fd.read()
 
 
