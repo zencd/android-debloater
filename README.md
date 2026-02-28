@@ -2,7 +2,9 @@
 
 ## Prepare
 
-- Download this Python script (address?)
+- Download this Python script:
+  - unpack https://github.com/zencd/debloater/archive/refs/heads/master.zip
+  - or `git clone --branch master --depth 1 https://github.com/zencd/debloater`
 - Install Python 3.9+, add it to the PATH
 - Install `adb`, add it to the PATH
   - `brew install android-platform-tools` (macos)

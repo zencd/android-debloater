@@ -169,7 +169,7 @@ USER_PREFS = APP_HOME / 'user-prefs.txt'
 APP_ICON_DIR = APP_HOME / 'icons'
 APP_ICON_DIR.mkdir(parents=True, exist_ok=True)
 AUDIT_LOG_FILE = APP_HOME / 'audit.log'
-APP_REPO = 'https://github.com/zencd/xxx'
+APP_REPO = 'https://github.com/zencd/debloater'
 
 FILTER_TO_STATUS = {'deviceUninstalled': 'uninstalled', 'deviceDisabled': 'disabled'}
 
