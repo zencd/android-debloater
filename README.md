@@ -14,9 +14,17 @@
 
 - `python3 web.py`
 
-## Features
+## Features & benefits
 
-- Debloat unwanted software in one-pass
-- User preferences are remembered
+- Keep your personal list of bloatware 
+- Debloat smartphone in one pass
+- Disable, enable, uninstall and reinstall packages individually
+- Description of every important package is available via [UAD](https://github.com/Universal-Debloater-Alliance/universal-android-debloater-next-generation) community
 - Backup/restore user-installed apps
-- Backup/restore permissions that user set manually
+- Backup permissions that user have set manually, restore them
+
+## Tested with
+
+- Xiaomi 12x, Poco X4 GT, Poco X7 Pro, Pixel 5a, Pixel 7, Oneplus 13T, Oneplus 15, Moto X50 Ultra
+- ADB 36.0.2, protocol 1.0.41 
+- MacOS 15.7, Windows 10

@@ -301,8 +301,13 @@ async function restoreApps() {
 async function restoreAppPerms() {
   try {
     showLoader()
-    const permResp = await fetch('/restoreAppPermissions').then(r => r.json());
-    console.log('Received data:', permResp);
+    const response = await fetch('/restoreAppPermissions')
+    const permResp = await response.json()
+    if (!response.ok) {
+      toast(`${permResp.message}`, 'toastError')
+      return
+    }
+    console.log('Received data:', permResp)
     if (permResp.fails === 0) {
       toast(`Permissions set: ${permResp.oks}.`, 'toastOk')
     } else {

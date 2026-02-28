@@ -253,3 +253,4 @@ body[data-lang="en"] ru { display: none; }
 body[data-lang="ru"] en { display: none; }
 body[data-lang="en"] [data-lang="ru"] { display: none; }
 body[data-lang="ru"] [data-lang="en"] { display: none; }
+.usage { color: #666666; }

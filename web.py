@@ -448,7 +448,7 @@ def list_device_user_installed_packages() -> set[str]:
     return set(extract_package_names(lines))
 
 
-def list_device_apk_paths(package):
+def list_apk_paths_on_device(package):
     rc, stdout, stderr = exec_(['adb', 'shell', 'pm', 'path', package])
     assert rc == 0, f'ADB failed with code: {rc}'
     lines = stdout.splitlines()
@@ -593,43 +593,42 @@ def uninstall_or_disable_package(package):
     return rc, stdout, stderr
 
 
-def backup_apks():
-    try:
-        num_local_apps = len(list_apps_in_local_folder())
-        if num_local_apps > 0:
-            # After the first backup, user may and will remove some unwanted apps.
-            # So we won't start a new backup, otherwise user will be required to remove these apps again.
-            return 0, f'There are {num_local_apps} local apps already downloaded in {APKS_DIR}. Remove them first if you want a new backup procedure.'
+def backup_apks_for_package(package: str) -> bool:
+    final_app_folder = APKS_DIR / package
+    if final_app_folder.exists():
+        return False
+    apk_paths = list_apk_paths_on_device(package)
+    if not apk_paths:
+        return False
+    with tempfile.TemporaryDirectory(dir=APP_START_DIR) as tmp_dir_:
+        tmp_dir = Path(tmp_dir_)
+        cwd_before = os.getcwd()
+        try:
+            os.chdir(tmp_dir)
+            for apk_path in apk_paths:
+                cmd = ['adb', 'pull', apk_path]
+                rc, stdout, stderr = exec_(cmd, stdout=None, stderr=None)
+                assert rc == 0, f'ADB failed with code: {rc}'
+            ensure_dir(APKS_DIR)
+            if final_app_folder.exists():
+                shutil.rmtree(final_app_folder)
+            shutil.move(tmp_dir, final_app_folder)
+        finally:
+            os.chdir(cwd_before)
+    return True
 
-        num_apps_downloaded = 0
-        ensure_dir(APKS_DIR)
-        packages = list_device_user_installed_packages()
-        for package in packages:
-            final_app_folder = APKS_DIR / package
 
-            # download apk files, if not yet
-            if not final_app_folder.exists():
-                if apk_paths := list_device_apk_paths(package):
-                    tmp_app_folder = APP_START_DIR / 'tmp'  # todo use a random folder
-                    if tmp_app_folder.exists():
-                        # todo fails on windows: file is busy
-                        # todo fails on windows: file is busy
-                        # todo fails on windows: file is busy
-                        shutil.rmtree(tmp_app_folder)
-                    tmp_app_folder.mkdir()
-                    os.chdir(tmp_app_folder)
-                    for apk_path in apk_paths:
-                        cmd = ['adb', 'pull', apk_path]
-                        rc, stdout, stderr = exec_(cmd, stdout=None, stderr=None)
-                        assert rc == 0, f'ADB failed with code: {rc}'
-                    assert APKS_DIR.exists()
-                    if final_app_folder.exists():
-                        shutil.rmtree(final_app_folder)
-                    shutil.move(tmp_app_folder, final_app_folder)
-                    num_apps_downloaded += 1
-        return num_apps_downloaded, ''
-    finally:
-        os.chdir(APP_START_DIR)
+def backup_user_apps():
+    num_local_apps = len(list_apps_in_local_folder())
+    if num_local_apps > 0:
+        return 0, f'There are {num_local_apps} local apps already downloaded in {APKS_DIR}. Remove them first if you want a new backup procedure.'
+    num_apps_downloaded = 0
+    ensure_dir(APKS_DIR)
+    packages = list_device_user_installed_packages()
+    for package in packages:
+        if backup_apks_for_package(package):
+            num_apps_downloaded += 1
+    return num_apps_downloaded, ''
 
 
 def shorten_perm(perm: str):
@@ -679,6 +678,7 @@ def restore_app_install_apks(package):
 
 
 def restore_all_apps_permissions():
+    assert ALL_PERMISSIONS_FILE.exists(), f'No permissions file found. Backup them first.'
     oks, fails = 0, 0
     device_packages = list_device_enabled_packages()
     for package, perm, grant in parse_perm_file(ALL_PERMISSIONS_FILE):
@@ -892,7 +892,7 @@ def serve_debloat(request, response):
 
 
 def serve_backup_apps(request, response):
-    num_apps_downloaded, msg = backup_apks()
+    num_apps_downloaded, msg = backup_user_apps()
     response.content_type = CT_JSON
     return {'status': 'OK',
             'numAppsDownloaded': num_apps_downloaded,
@@ -949,7 +949,7 @@ def serve_read_device_apps_meta(request, response):
         for package in list_device_all_packages():
             if package in app_meta_packages:
                 continue
-            apk_paths = list_device_apk_paths(package)
+            apk_paths = list_apk_paths_on_device(package)
             if not apk_paths:
                 fails += 1
                 continue
