@@ -5,7 +5,7 @@
 - Download this Python script:
   - unpack https://github.com/zencd/debloater/archive/refs/heads/master.zip
   - or `git clone --branch master --depth 1 "https://github.com/zencd/debloater"`
-- Install Python 3.9+, add it to the PATH
+- Install Python 3.9+ ([MS Store](https://apps.microsoft.com/search?query=python))
 - Install `adb`, add it to the PATH
   - `brew install android-platform-tools` (macos)
   - https://developer.android.com/tools/releases/platform-tools (all systems)
@@ -19,7 +19,7 @@
 - Keep your personal list of bloatware 
 - Debloat smartphone in one pass
 - Disable, enable, uninstall and reinstall packages individually
-- Description of every important package is available via [UAD](https://github.com/Universal-Debloater-Alliance/universal-android-debloater-next-generation) community
+- Description of every important package is available via [UAD NG](https://github.com/Universal-Debloater-Alliance/universal-android-debloater-next-generation)
 - Backup/restore user-installed apps
 - Backup permissions that user have set manually, restore them
 

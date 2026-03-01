@@ -372,12 +372,12 @@ function loadSettings() {
       const $elem = document.querySelector(`.topNavTab[data-tab="settings"] .${file}`)
       const value = data[file]
       if (value.startsWith('https:')) {
-        $elem.innerHTML = `<a href="${value}" target="_blank">${value}</a>`
+        $elem.innerHTML = `<a href="${encodeURIComponent(value)}" target="_blank">${escapeHtml(value)}</a>`
       } else {
         if (filesNoLink.includes(file)) {
-          $elem.innerText = value
+          $elem.textContent = value
         } else {
-          $elem.innerHTML = `<a href="/openFile?what=${file}" onclick="openFile(event, this)">${value}</a>`
+          $elem.innerHTML = `<a href="/openFile?what=${encodeURIComponent(file)}" onclick="openFile(event, this)">${escapeHtml(value)}</a>`
         }
       }
     }
@@ -540,6 +540,12 @@ $menuItems.forEach(item => {
     switchTab(this.dataset.tab)
   })
 })
+
+function escapeHtml(str) {
+  const div = document.createElement('div')
+  div.textContent = str
+  return div.innerHTML
+}
 
 /////////////////////
 
