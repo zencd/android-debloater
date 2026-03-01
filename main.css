@@ -33,6 +33,7 @@ a:hover {
 /***** Navigation *****/
 .topNav a {
   color: #666;
+  background: var(--bg);
   text-decoration: none;
   cursor: pointer;
   user-select: none;
@@ -45,7 +46,7 @@ a:hover {
   border-bottom: 3px dotted;
   cursor: default;
 }
-#deviceTitle { color: #666; border-bottom: none; font-weight: normal; font-size: 0.5em; }
+#deviceTitle { color: #666; background: var(--bg); border-bottom: none; font-weight: normal; font-size: 0.5em; }
 /***** Toolbar *****/
 button {
   background: var(--panel);
@@ -71,6 +72,18 @@ button:hover {
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px;
+
+  background-image: url("/logo");
+  background-repeat: no-repeat;
+  background-position: top 36px right;
+  background-size: 30%;
+
+/*
+  background-image: url("/logo");
+  background-repeat: no-repeat;
+  background-position: top 0px center;
+  background-size: 30%;
+*/
 }
 .filters {
   display: flex;

@@ -30,14 +30,14 @@ def running_in_venv():
 
 
 def ensure_running_in_venv():
-    print(f'Python interpreter: {sys.executable}, not suitable')
+    log.debug(f'Python interpreter: {sys.executable}, not suitable')
     # force execution in a venv bcs we can fail installing extra packages otherwise
     venv = APP_HOME / 'venv'
     exes = [venv / 'bin/python', venv / 'Scripts/python.exe']
     python_exe = next(iter(exe for exe in exes if exe.exists()), None)
     if not python_exe:
         cmd = [sys.executable, '-m', 'venv', str(venv)]
-        print(f'Exec: {shlex.join(cmd)}')
+        log.info(f'Exec: {shlex.join(cmd)}')
         p = subprocess.Popen(cmd, shell=False, stdout=None, stderr=None, text=True, encoding='utf-8')
         stdout, stderr = p.communicate()
         rc = p.returncode & 0xFF
@@ -45,7 +45,7 @@ def ensure_running_in_venv():
         python_exe = next(iter(exe for exe in exes if exe.exists()), None)
         assert python_exe, f'Failed creating venv: {venv}'
     cmd = [str(python_exe)] + sys.argv
-    print(f'Exec: {shlex.join(cmd)}')
+    log.info(f'Exec: {shlex.join(cmd)}')
     p = subprocess.Popen(cmd, shell=False, stdout=None, stderr=None, text=True, encoding='utf-8')
     stdout, stderr = p.communicate()
     rc = p.returncode & 0xFF
@@ -70,7 +70,6 @@ logging.getLogger('pyaxmlparser').setLevel(logging.ERROR)  # fighting warning "r
 
 # todo embed resources
 # todo ERR_CONNECTION_REFUSED not toasted
-# todo show local apps even if no device connected
 # todo verify uad_lists.json before rewriting it
 # todo have a local uad_lists.json copy
 # todo recommended => safe
@@ -99,10 +98,12 @@ class JsonDB:
             return self.data
 
     def dump(self):
-        # todo write to a temp file first, bcs once I lost file content after ctrl+C
+        # XXX writing to a temp file first, bcs once I randomly lost file content on ctrl+C
+        tmp = tempfile.NamedTemporaryFile(suffix='.json', delete=False).name
         assert self.data is not None
-        with open(self.path, 'w', encoding='utf-8') as fd:
+        with open(tmp, 'w', encoding='utf-8') as fd:
             json.dump(self.data, fp=fd, ensure_ascii=False, indent=2)
+        os.rename(tmp, self.path)
 
 
 class PackageCache:
@@ -167,6 +168,7 @@ USER_PREFS = APP_HOME / 'user-prefs.txt'
 APP_ICON_DIR = APP_HOME / 'icons'
 APP_ICON_DIR.mkdir(parents=True, exist_ok=True)
 AUDIT_LOG_FILE = APP_HOME / 'audit.log'
+MAIN_LOG_FILE = APP_HOME / 'main.log'
 APP_REPO = 'https://github.com/zencd/debloater'
 
 FILTER_TO_STATUS = {'deviceUninstalled': 'uninstalled', 'deviceDisabled': 'disabled'}
@@ -178,14 +180,37 @@ def create_audit_logger():
     log_file.parent.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger('audit_logger')
     logger.setLevel(level)
-    handler = logging.FileHandler(log_file, encoding='utf-8')
-    handler.setLevel(level)
-    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s', '%Y-%m-%d %H:%M:%S'))
-    logger.addHandler(handler)
+    if not logger.handlers:
+        handler = logging.FileHandler(log_file, encoding='utf-8')
+        handler.setLevel(level)
+        handler.setFormatter(logging.Formatter('%(asctime)s %(message)s', '%Y-%m-%d %H:%M:%S'))
+        logger.addHandler(handler)
+    return logger
+
+
+def create_main_logger():
+    level = logging.DEBUG
+    log_file = MAIN_LOG_FILE
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    logger = logging.getLogger('main_logger')
+    logger.setLevel(level)
+    if not logger.handlers:
+        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%Y-%m-%d %H:%M:%S')
+
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(level)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
     return logger
 
 
 audit = create_audit_logger()
+log = create_main_logger()
 
 
 ####################################################
@@ -206,7 +231,7 @@ def open_browser(url):
 
 def open_local_file_or_folder(path: str):
     if not os.path.exists(path):
-        print(f'Missing path: {path}')
+        log.debug(f'Missing path: {path}')
         return
     system = platform.system()
     if system == 'Windows':
@@ -245,7 +270,7 @@ def exec_(cmd: list, stdout: Optional[int] = subprocess.PIPE, stderr: Optional[i
     slug = re.sub(r'__+', '_', slug).strip('_')
     fake_answer_file_stdout = FAKE_ANSWERS_DIR / f'{slug}.out.txt'
     fake_answer_file_stderr = FAKE_ANSWERS_DIR / f'{slug}.err.txt'
-    print('Exec:', cmd_join)
+    log.info('Exec:', cmd_join)
     if FAKE_ANSWERS_MODE == 'play':
         stdout = read_file(fake_answer_file_stdout) if fake_answer_file_stdout.exists() else ''
         stderr = read_file(fake_answer_file_stderr) if fake_answer_file_stderr.exists() else ''
@@ -253,10 +278,13 @@ def exec_(cmd: list, stdout: Optional[int] = subprocess.PIPE, stderr: Optional[i
     else:
         p = subprocess.Popen(cmd, shell=False, stdout=stdout, stderr=stderr, text=True, encoding='utf-8')
         stdout, stderr = p.communicate()
+        rc = p.returncode & 0xFF
+        log.debug(f'Process exited with code {rc}')
+        log.debug(f'stdout: {stdout}')
+        log.debug(f'stderr: {stderr}')
         if FAKE_ANSWERS_MODE == 'record':
             write_file(fake_answer_file_stdout, stdout or '')
             write_file(fake_answer_file_stderr, stderr or '')
-        rc = p.returncode & 0xFF
         return rc, stdout, stderr
 
 
@@ -517,7 +545,13 @@ def list_apps_in_local_folder() -> set[str]:
 def list_apps_in_local_folder_ex():
     pak_meta = (APP_META_FILE.data or dict()).get('packages') or dict()
     local_packages = list_apps_in_local_folder()
-    device_packages = list_device_enabled_packages()
+    is_device_connected = True
+    device_packages = []
+    try:
+        device_packages = list_device_enabled_packages()
+    except Exception as e:
+        # case: device not plugged
+        is_device_connected = False
     res = []
     for package in local_packages:
         pak_dict = pak_meta.get(package) or dict()
@@ -525,7 +559,7 @@ def list_apps_in_local_folder_ex():
         icon_file = pak_dict.get('icon') or ''
         is_installed = package in device_packages
         res.append([package, is_installed, title, icon_file])
-    return res
+    return res, is_device_connected
 
 
 def resolve_apk_title(apk_info: pyaxmlparser.APK):
@@ -610,7 +644,7 @@ def backup_apks_for_package(package: str) -> bool:
             ensure_dir(APKS_DIR)
             if final_app_folder.exists():
                 shutil.rmtree(final_app_folder)
-            os.chdir(cwd_before)
+            os.chdir(cwd_before)  # XXX windows: we must leave the folder before renaming it
             shutil.move(tmp_dir, final_app_folder)
         finally:
             os.chdir(cwd_before)
@@ -659,7 +693,7 @@ def backup_permissions():
                 perm_cnt += 1
     with open(perm_file, 'w', encoding='utf-8') as fd:
         fd.write('\n'.join(sorted(out_lines)))
-    print(f'Rewritten {perm_file}')
+    log.info(f'Rewritten {perm_file}')
     return perm_cnt
 
 
@@ -672,7 +706,6 @@ def restore_app_install_apks(package):
     if apks:
         cmd = ['adb', 'install-multiple'] + apks
         rc, _, _ = exec_(cmd, stdout=None, stderr=None)
-        # print(f'install-multiple exited with {rc}')
     return rc
 
 
@@ -684,7 +717,6 @@ def restore_all_apps_permissions():
         if package not in device_packages:
             continue
         perm = normalize_perm(perm)
-        print('restoring permission', package, perm, grant)
         if restore_app_permission(package, perm, grant):
             oks += 1
         else:
@@ -738,7 +770,7 @@ def parse_perm_file(f: Path):
                 grant_str = words[2].lower()
                 grant = {'grant': True, 'revoke': False}.get(grant_str)
                 if grant is None:
-                    print(f'WARN: cannot parse permission: {line}')
+                    log.warning(f'WARN: cannot parse permission: {line}')
                     continue
                 yield package, perm, grant
 
@@ -805,19 +837,19 @@ def debloat_packages():
     packages = list_device_packages_to_debloat()
     packages = sorted(packages)
     for package in packages:
-        print(f'Deleting package: {package}')
+        log.debug(f'Deleting package: {package}')
         rc, stdout, stderr = uninstall_or_disable_package(package)
         if rc == 0:
-            print('OK')
+            log.debug('OK')
             oks += 1
         else:
-            print('FAIL')
+            log.debug('FAIL')
             fails += 1
 
         if rc != 0:
-            print(f'rc: {rc}')
-            print(f'stdout: {stdout}')
-            print(f'stderr: {stderr}')
+            log.debug(f'rc: {rc}')
+            log.debug(f'stdout: {stdout}')
+            log.debug(f'stderr: {stderr}')
     return oks, fails
 
 
@@ -926,12 +958,15 @@ def serve_restore_app(request, response):
 
 
 def serve_load_local_apps(request, response):
-    packages = list_apps_in_local_folder_ex()
+    packages, is_device_connected = list_apps_in_local_folder_ex()
     packages = sorted(packages, key=lambda x: x[0])
     response.content_type = CT_JSON
     device_name, warn_msg = read_device_name()
-    return {'status': 'OK', 'deviceTitle': device_name, 'warnMsg': warn_msg,
-            'packages': packages, 'localAppsFolder': str(PROFILE_DIR)}
+    return {'status': 'OK',
+            'deviceTitle': device_name,
+            'warnMsg': warn_msg,
+            'packages': packages,
+            'deviceConnected': is_device_connected}
 
 
 class ExtractApkMeta:
@@ -962,14 +997,14 @@ class ExtractApkMeta:
         try:
             apk_info = pyaxmlparser.APK(str(local_apk_path))
         except Exception as e:
-            print(f'ERROR: pyaxmlparser failed parsing {local_apk_path}')  # pyaxmlparser is buggy
+            log.error(f'pyaxmlparser failed parsing {local_apk_path}')  # pyaxmlparser is buggy
             return app_title, icon_data, icon_ext
         app_title = resolve_apk_title(apk_info)
         if not app_title:
-            print(f'WARN: failed resolving app title from apk {local_apk_path}, using {local_apk_path.stem}')
+            log.warning(f'Failed resolving app title from apk {local_apk_path}, using {local_apk_path.stem}')
             app_title = local_apk_path.stem
         if not app_title or app_title == 'base':
-            print(f'WARN: failed resolving app title from apk {local_apk_path}, skipping')
+            log.warning(f'Failed resolving app title from apk {local_apk_path}, skipping')
             return app_title, icon_data, icon_ext
         icon_data = self.__extract_icon_data(apk_info)
         icon_info = self.__extract_icon_path_in_apk(apk_info)
@@ -1038,7 +1073,7 @@ class ExtractApkMeta:
             self.db.dump()
             return True
         except Exception as e:
-            print(f'ERROR: Failed reading icon for {package}: {e}')
+            log.error(f'Failed reading icon for {package}: {e}')
             traceback.print_exc()
             return False
         finally:
@@ -1060,8 +1095,9 @@ def serve_read_device_apps_meta(request, response):
     return {'status': 'OK', 'oks': oks, 'fails': fails}
 
 
-def static_file(fname):
-    with open(fname, encoding='utf-8') as fd:
+def static_file(fname, mode='r'):
+    encoding = 'utf-8' if mode == 'r' else None
+    with open(fname, mode=mode, encoding=encoding) as fd:
         return fd.read()
 
 
@@ -1078,6 +1114,12 @@ def serve_main_css(request, response):
 def serve_main_js(request, response):
     response.content_type = 'text/javascript'
     return static_file('main.js')
+
+
+def serve_logo(request, response):
+    response.content_type = 'image/png'
+    # return static_file('logo.png', 'rb')
+    return static_file('BlakstoneHatchOneFill.png', 'rb')
 
 
 def serve_app_icon(request, response):
@@ -1143,6 +1185,7 @@ routes = {
     '/': serve_index,
     '/main.css': serve_main_css,
     '/main.js': serve_main_js,
+    '/logo': serve_logo,
     '/appIcon': serve_app_icon,
     '/readAppMeta': serve_read_device_apps_meta,
     '/loadLocalApps': serve_load_local_apps,
@@ -1229,12 +1272,12 @@ def main_vanilla():
     try:
         server = ThreadingHTTPServer((HOST, PORT), MyWebHandler)
         url = f'http://{HOST}:{PORT}/'
-        print(f'Web server starting: {url}')
+        log.info(f'Web server starting: {url}')
         if not DEBUG:
             open_browser(url)
         server.serve_forever()
     except KeyboardInterrupt:
-        print('Bye')
+        log.info('Bye')
 
 
 if __name__ == '__main__':

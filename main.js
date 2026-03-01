@@ -54,12 +54,13 @@ function loadUserPrefs(doAlert) {
 
 let gDebloatPackages = []
 
-function onPackagesReceived(data) { // todo если убрать data, код не будет работать, но и никакой ошибки не будет х_х
+function onPackagesReceived(data) {
+  // todo если убрать data, код не будет работать, но и никакой ошибки не будет х_х
   gDebloatPackages = []
   $debloatUsages.forEach(elem => elem.style.display = data.packages.length === 0 && elem.dataset.lang === gLang ? 'block' : 'none') // hide help
   if (data.warnMsg) toast(data.warnMsg, 'toastWarn')
   $deviceTitle.innerText = data.deviceTitle
-  $cards.innerText = 'No packages matching this filter'
+  $cards.innerText = ''
   let i = 0
   for (const pakData of data.packages) {
     if (i === 0) $cards.innerText = ''
