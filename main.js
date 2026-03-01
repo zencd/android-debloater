@@ -372,7 +372,7 @@ function loadSettings() {
       const $elem = document.querySelector(`.topNavTab[data-tab="settings"] .${file}`)
       const value = data[file]
       if (value.startsWith('https:')) {
-        $elem.innerHTML = `<a href="${encodeURIComponent(value)}" target="_blank">${escapeHtml(value)}</a>`
+        $elem.innerHTML = `<a href="${value}" target="_blank">${escapeHtml(value)}</a>`
       } else {
         if (filesNoLink.includes(file)) {
           $elem.textContent = value
