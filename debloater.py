@@ -20,6 +20,9 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
+MIN_PY_VER = 3, 9
+assert sys.version_info >= MIN_PY_VER, f'Python {".".join(map(str, MIN_PY_VER))} or newer is required. You have: {sys.version}'
+
 APP_HOME = Path.home() / '.android-debloater'
 APP_HOME.mkdir(parents=True, exist_ok=True)
 
@@ -28,9 +31,9 @@ def running_in_venv():
     return sys.prefix != sys.base_prefix
 
 
-def ensure_running_in_venv():
+def restart_process_in_venv():
+    # here we force execution in a venv bcs we can fail installing extra modules otherwise
     log.debug(f'Python interpreter: {sys.executable}, not suitable')
-    # force execution in a venv bcs we can fail installing extra packages otherwise
     venv = APP_HOME / 'venv'
     exes = [venv / 'bin/python', venv / 'Scripts/python.exe']
     python_exe = next(iter(exe for exe in exes if exe.exists()), None)
@@ -38,7 +41,7 @@ def ensure_running_in_venv():
         cmd = [sys.executable, '-m', 'venv', str(venv)]
         log.info(f'Exec: {shlex.join(cmd)}')
         p = subprocess.Popen(cmd, shell=False, stdout=None, stderr=None, text=True, encoding='utf-8')
-        stdout, stderr = p.communicate()
+        p.communicate()
         rc = p.returncode & 0xFF
         assert rc == 0, f'Failed creating venv: {venv}'
         python_exe = next(iter(exe for exe in exes if exe.exists()), None)
@@ -46,25 +49,27 @@ def ensure_running_in_venv():
     cmd = [str(python_exe)] + sys.argv
     log.info(f'Exec: {shlex.join(cmd)}')
     p = subprocess.Popen(cmd, shell=False, stdout=None, stderr=None, text=True, encoding='utf-8')
-    stdout, stderr = p.communicate()
+    p.communicate()
     rc = p.returncode & 0xFF
     sys.exit(rc)
 
 
 if not running_in_venv():
-    ensure_running_in_venv()
+    restart_process_in_venv()
 
 print(f'Python interpreter: {sys.executable}')
 
 try:
-    import pyaxmlparser  # it reads apk file meta
+    # pyaxmlparser reads apk file meta: title, version, icon
+    # pyaxmlparser 0.3.31 is current at the moment of writing
+    import pyaxmlparser
 except ImportError:
     print('Installing module pyaxmlparser...')
-    subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyaxmlparser'])
-    print('Module pyaxmlparser successfully installed')
+    subprocess.run([sys.executable, '-m', 'pip', 'install', 'pyaxmlparser~=0.3'])
     import pyaxmlparser
 
-logging.getLogger('pyaxmlparser').setLevel(logging.ERROR)  # fighting warning "res1 is not zero"
+    print('Module pyaxmlparser successfully installed')
+    logging.getLogger('pyaxmlparser').setLevel(logging.ERROR)  # fighting frequent warning "res1 is not zero"
 
 
 # todo embed resources
@@ -1278,9 +1283,15 @@ class MyWebHandler(BaseHTTPRequestHandler):
             super().log_message(fmt, *args)
 
 
+class MyServer(ThreadingHTTPServer):
+    daemon_threads = True
+    request_queue_size = 128
+
+
 def main_vanilla():
     try:
-        server = ThreadingHTTPServer((HOST, PORT), MyWebHandler)
+        server = MyServer((HOST, PORT), MyWebHandler)
+        server.socket.settimeout(60)
         url = f'http://{HOST}:{PORT}/'
         log.info(f'Web server starting: {url}')
         if not DEBUG:
