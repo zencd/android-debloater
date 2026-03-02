@@ -33,13 +33,13 @@ def running_in_venv():
 
 def restart_process_in_venv():
     # here we force execution in a venv bcs we can fail installing extra modules otherwise
-    log.debug(f'Python interpreter: {sys.executable}, not suitable')
+    print(f'Python interpreter: {sys.executable}, not suitable')
     venv = APP_HOME / 'venv'
     exes = [venv / 'bin/python', venv / 'Scripts/python.exe']
     python_exe = next(iter(exe for exe in exes if exe.exists()), None)
     if not python_exe:
         cmd = [sys.executable, '-m', 'venv', str(venv)]
-        log.info(f'Exec: {shlex.join(cmd)}')
+        print(f'Exec: {shlex.join(cmd)}')
         p = subprocess.Popen(cmd, shell=False, stdout=None, stderr=None, text=True, encoding='utf-8')
         p.communicate()
         rc = p.returncode & 0xFF
@@ -47,7 +47,7 @@ def restart_process_in_venv():
         python_exe = next(iter(exe for exe in exes if exe.exists()), None)
         assert python_exe, f'Failed creating venv: {venv}'
     cmd = [str(python_exe)] + sys.argv
-    log.info(f'Exec: {shlex.join(cmd)}')
+    print(f'Exec: {shlex.join(cmd)}')
     p = subprocess.Popen(cmd, shell=False, stdout=None, stderr=None, text=True, encoding='utf-8')
     p.communicate()
     rc = p.returncode & 0xFF
