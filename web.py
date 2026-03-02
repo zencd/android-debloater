@@ -11,7 +11,6 @@ import sys
 import tempfile
 import traceback
 import urllib.request
-from datetime import datetime
 from functools import cache
 from json import JSONDecodeError
 from pathlib import Path
@@ -21,7 +20,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
-APP_HOME = Path.home() / '.android-fast-tuner'
+APP_HOME = Path.home() / '.android-debloater'
 APP_HOME.mkdir(parents=True, exist_ok=True)
 
 
@@ -156,7 +155,9 @@ PROFILE_DIR = APP_HOME / 'profile1'
 APKS_DIR = PROFILE_DIR / 'apk'
 ALL_PERMISSIONS_FILE = PROFILE_DIR / 'permissions.txt'
 
-FAKE_ANSWERS_DIR = Path(__file__).parent / 'fake-answers'
+PROJECT_DIR = Path(__file__).parent
+
+FAKE_ANSWERS_DIR = PROJECT_DIR / 'fake-answers'
 FAKE_ANSWERS_MODE = 'none'
 # FAKE_ANSWERS_MODE = 'record'
 # FAKE_ANSWERS_MODE = 'play'
@@ -1098,31 +1099,11 @@ def serve_read_device_apps_meta(request, response):
     return {'status': 'OK', 'oks': oks, 'fails': fails}
 
 
-def static_file(fname, mode='r'):
+def static_file(fname: str, mode='rb', base_dir='.'):
     encoding = 'utf-8' if mode == 'r' else None
+    fname = os.path.join(base_dir, fname)
     with open(fname, mode=mode, encoding=encoding) as fd:
         return fd.read()
-
-
-def serve_index(request, response):
-    response.content_type = 'text/html'
-    return static_file('index.html')
-
-
-def serve_main_css(request, response):
-    response.content_type = 'text/css'
-    return static_file('main.css')
-
-
-def serve_main_js(request, response):
-    response.content_type = 'text/javascript'
-    return static_file('main.js')
-
-
-def serve_logo(request, response):
-    response.content_type = 'image/png'
-    # return static_file('logo.png', 'rb')
-    return static_file('BlakstoneHatchOneFill.png', 'rb')
 
 
 def serve_app_icon(request, response):
@@ -1184,11 +1165,31 @@ def serve_settings(request, response):
     return res
 
 
+STATIC_URL_PREFIX = '/static/'
+
+
+def serve_index(request, response):
+    response.content_type = 'text/html'
+    fname = os.path.join(PROJECT_DIR, 'static', 'index.html')
+    return static_file(fname)
+
+
+def serve_static(request: 'Request', response):
+    sub_path = request.path[len(STATIC_URL_PREFIX):]
+    if sub_path.endswith('.css'):
+        response.content_type = 'text/css'
+    elif sub_path.endswith('.js'):
+        response.content_type = 'text/javascript'
+    fname = os.path.join(PROJECT_DIR, 'static', sub_path)
+    if not os.path.exists(fname):
+        response.content_type = 'text/plain'
+        response.status_code = 404
+        return 'Not found'
+    return static_file(fname)
+
+
 routes = {
     '/': serve_index,
-    '/main.css': serve_main_css,
-    '/main.js': serve_main_js,
-    '/logo': serve_logo,
     '/appIcon': serve_app_icon,
     '/readAppMeta': serve_read_device_apps_meta,
     '/loadLocalApps': serve_load_local_apps,
@@ -1213,6 +1214,7 @@ routes = {
 
 @dataclasses.dataclass
 class Request:
+    path: str
     query: dict
 
 
@@ -1227,12 +1229,16 @@ class MyWebHandler(BaseHTTPRequestHandler):
         parsed_url = urlparse(self.path)
         query_params = parse_qs(parsed_url.query)
         path = parsed_url.path
-        handler = routes.get(path)
+        handler = None
+        if path.startswith(STATIC_URL_PREFIX):
+            handler = serve_static
+        if not handler:
+            handler = routes.get(path)
         status_code = 200
         query: dict[str, str] = dict()
         for key, values in query_params.items():
             query[key] = values[0]
-        request = Request(query)
+        request = Request(path, query)
         response = Response('', 200)
 
         if handler:
@@ -1249,6 +1255,7 @@ class MyWebHandler(BaseHTTPRequestHandler):
             resp_obj = 'Not found'
             status_code = 404
 
+        resp_ct = ''
         if isinstance(resp_obj, dict) or isinstance(resp_obj, list):
             resp_ct = 'application/json; charset=utf-8'
             indent = 2 if DEBUG else None

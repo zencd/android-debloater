@@ -73,10 +73,16 @@ button:hover {
   margin: 0 auto;
   padding: 24px;
 
-  background-image: url("/logo");
-  background-repeat: no-repeat;
+  background-image: url("/static/img/BlakstoneHatchOneFill.png");
   background-position: top -28px right;
   background-size: 400px 200px;
+  background-repeat: no-repeat;
+/*
+  background-image: url("/static/img/black2tr1.png");
+  background-position: top -28px right 0px;
+  background-size: 500px 290px;
+  background-repeat: no-repeat;
+*/
 }
 .filters {
   display: flex;
