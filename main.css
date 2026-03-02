@@ -75,15 +75,8 @@ button:hover {
 
   background-image: url("/logo");
   background-repeat: no-repeat;
-  background-position: top 36px right;
-  background-size: 30%;
-
-/*
-  background-image: url("/logo");
-  background-repeat: no-repeat;
-  background-position: top 0px center;
-  background-size: 30%;
-*/
+  background-position: top 6px right;
+  background-size: 400px 100px;
 }
 .filters {
   display: flex;

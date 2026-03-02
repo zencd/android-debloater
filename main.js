@@ -77,6 +77,14 @@ function onPackagesReceived(data) {
     gDebloatPackages.push(pakName)
     i++
   }
+  $packageFilter.querySelectorAll('option').forEach($option => {
+    //if (!$option.selected) return
+    let text = $option.innerText.replace(/:\s*\d+/, '') // cut number of packages
+    text = $option.selected ? `${text}: ${data.packages.length}` : text // add number of packages
+    if (text !== $option.innerText) {
+      $option.innerText = text
+    }
+  })
 }
 
 function deleteUnwanted() {

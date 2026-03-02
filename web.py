@@ -74,6 +74,7 @@ logging.getLogger('pyaxmlparser').setLevel(logging.ERROR)  # fighting warning "r
 # todo have a local uad_lists.json copy
 # todo recommended => safe
 # todo reload packages once at backend?
+# todo resolve language for the first time from browser
 
 
 class JsonDB:
@@ -189,13 +190,14 @@ def create_audit_logger():
 
 
 def create_main_logger():
-    level = logging.DEBUG
+    level = logging.DEBUG if DEBUG else logging.INFO
+    # level = logging.INFO
     log_file = MAIN_LOG_FILE
     log_file.parent.mkdir(parents=True, exist_ok=True)
     logger = logging.getLogger('main_logger')
     logger.setLevel(level)
     if not logger.handlers:
-        formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', '%Y-%m-%d %H:%M:%S')
+        formatter = logging.Formatter('%(asctime)s %(levelname)-7s %(message)s', '%Y-%m-%d %H:%M:%S')
 
         file_handler = logging.FileHandler(log_file, encoding='utf-8')
         file_handler.setLevel(level)
@@ -270,18 +272,19 @@ def exec_(cmd: list, stdout: Optional[int] = subprocess.PIPE, stderr: Optional[i
     slug = re.sub(r'__+', '_', slug).strip('_')
     fake_answer_file_stdout = FAKE_ANSWERS_DIR / f'{slug}.out.txt'
     fake_answer_file_stderr = FAKE_ANSWERS_DIR / f'{slug}.err.txt'
-    log.info('Exec:', cmd_join)
     if FAKE_ANSWERS_MODE == 'play':
         stdout = read_file(fake_answer_file_stdout) if fake_answer_file_stdout.exists() else ''
         stderr = read_file(fake_answer_file_stderr) if fake_answer_file_stderr.exists() else ''
         return 0, stdout, stderr
     else:
+        log.info(f'Exec: {shlex.join(cmd)}')
         p = subprocess.Popen(cmd, shell=False, stdout=stdout, stderr=stderr, text=True, encoding='utf-8')
         stdout, stderr = p.communicate()
         rc = p.returncode & 0xFF
         log.debug(f'Process exited with code {rc}')
-        log.debug(f'stdout: {stdout}')
-        log.debug(f'stderr: {stderr}')
+        # log.debug(f'Stdout: {stdout}')
+        if stderr:
+            log.debug(f'Stderr: {stderr}')
         if FAKE_ANSWERS_MODE == 'record':
             write_file(fake_answer_file_stdout, stdout or '')
             write_file(fake_answer_file_stderr, stderr or '')
