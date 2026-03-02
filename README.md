@@ -12,7 +12,7 @@
 
 ## Run
 
-- `python3 web.py`
+- `python3 debloater.py`
 
 ## Features & benefits
 
