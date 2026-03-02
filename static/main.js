@@ -338,13 +338,14 @@ function loadLocalApps() {
     if (data.warnMsg) toast(data.warnMsg, 'toastWarn')
     $deviceTitle.innerText = data.deviceTitle
     $localAppsList.innerText = ''
+    $localAppsListHolder.style.display = (data.packages.length > 0) ? 'block' : 'none'
     for (var packageInfo of data.packages) {
       const packageName = packageInfo[0]
       const installedAlready = packageInfo[1]
       const title = packageInfo[2]
       const $li = document.createElement('li')
       $li.innerHTML = packageName
-      if (title) $li.innerHTML += ` <span class="title">- ${title}</span>`
+      if (title) $li.innerHTML += ` <span class="title">— ${title}</span>`
       $li.setAttribute('data-package', packageName)
       if (installedAlready) {
         $li.classList.add('installed')
@@ -352,7 +353,8 @@ function loadLocalApps() {
       } else {
         gNotInstalledPackages.push(packageName)
       }
-      $li.innerHTML += '<span class="comment"> — to install</span>'
+      const notInstalled = gLang === 'en' ? 'not installed' : 'не установлено'
+      $li.innerHTML += `<span class="comment"> — ${notInstalled}</span>`
       $localAppsList.appendChild($li)
     }
   })
@@ -460,6 +462,7 @@ const $reloadApps = document.getElementById('reloadApps')
 const $deviceTitle = document.getElementById('deviceTitle')
 const $deleteUnwanted = document.getElementById('deleteUnwanted')
 const $localAppsList = document.getElementById('localAppsList')
+const $localAppsListHolder = document.getElementById('localAppsListHolder')
 const $loaderOverlay = document.getElementById('loader-overlay')
 const $packageFilter = document.getElementById('packageFilter')
 const $menuDebloat = document.getElementById('menuDebloat')

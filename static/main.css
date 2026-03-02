@@ -73,16 +73,16 @@ button:hover {
   margin: 0 auto;
   padding: 24px;
 
+/*
   background-image: url("/static/img/BlakstoneHatchOneFill.png");
   background-position: top -28px right;
   background-size: 400px 200px;
   background-repeat: no-repeat;
-/*
+*/
   background-image: url("/static/img/black2tr1.png");
   background-position: top -28px right 0px;
   background-size: 500px 290px;
   background-repeat: no-repeat;
-*/
 }
 .filters {
   display: flex;
@@ -130,64 +130,64 @@ button:hover {
 .card:hover {
   background: var(--panel-hover);
 }
-.package {
+.card .package {
   font-family: var(--mono);
   font-size: 13px;
   margin-bottom: 6px;
   word-break: break-all;
 }
-.package span {
+.card .package span {
   background: var(--panel);
 }
 .card:hover .package span {
   background: var(--panel-hover);
 }
-.title {
+.card .title {
   font-size: 13px;
   margin-bottom: 6px;
 }
-.description {
+.card .description {
   font-size: 13px;
   color: var(--muted);
   margin-bottom: 12px;
   overflow-wrap: break-word;
 }
-.meta {
+.card .meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: auto;
 }
-.badges {
+.card .badges {
   display: flex;
   gap: 6px;
 }
-.badge {
+.card .badge {
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 999px;
   background: #2a3142;
   color: var(--muted);
 }
-.badge.system {
+.card .badge.system {
   color: var(--yellow);
 }
-.actions {
+.card .actions {
   display: flex;
   gap: 8px;
 }
-.action-keep {
+.card .action-keep {
   border-color: var(--green);
   color: var(--green);
 }
-.action-delete {
+.card .action-delete {
   border-color: var(--red);
   color: var(--red);
 }
-.action-keep:hover {
+.card .action-keep:hover {
   background: rgba(76, 175, 80, 0.15);
 }
-.action-delete:hover {
+.card .action-delete:hover {
   background: rgba(244, 67, 54, 0.15);
 }
 .card select {
@@ -253,9 +253,9 @@ button:hover {
   transform: scale(1.4);
 }
 #localAppsList li.installed::marker { content: "✅ "; color: gold; }
-#localAppsList li .comment { display: inline; color: #666; }
-#localAppsList li .title { display: inline; color: #666; }
+#localAppsList li .comment { display: inline; color: #666; font-size: 13px; }
 #localAppsList li.installed .comment { display: none; }
+#localAppsList li .title { display: inline; color: #666; font-size: 13px; }
 .toastOk { color: black !important; background: #baffc9 !important; background: #ccc !important; }
 .toastWarn { color: black !important; background: #ffffba !important; }
 .toastError { color: black !important; background: #ffb3ba !important; }
