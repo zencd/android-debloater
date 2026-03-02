@@ -1,4 +1,4 @@
-# Android Debloat & Backup
+# Android Debloater
 
 ## Prepare
 
