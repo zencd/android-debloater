@@ -247,9 +247,9 @@ button:hover {
   transform: scale(1.4);
 }
 #localAppsList li.installed::marker { content: "✅ "; color: gold; }
-#localAppsList li .comment { display: inline; color: #666; }
-#localAppsList li.installed .comment { display: none; }
 #localAppsList li .title { display: inline; color: #666; }
+#localAppsList li .comment { display: inline; color: #333; }
+#localAppsList li.installed .comment { display: none; }
 .toastOk { color: black !important; background: #baffc9 !important; background: #ccc !important; }
 .toastWarn { color: black !important; background: #ffffba !important; }
 .toastError { color: black !important; background: #ffb3ba !important; }

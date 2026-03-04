@@ -443,7 +443,7 @@ function hideLoader() {
 
 function toast(text, className, duration) {
   className = className || 'toastError'
-  duration = duration || 6000
+  duration = duration || 4000
   const t = Toastify({
     text: text,
     duration: duration,
@@ -516,7 +516,7 @@ const $menuItemsFirst = $menuItems[0]
 const $tabContents = document.querySelectorAll('.topNavTab')
 
 const tabActions = {
-  debloat: () => loadUserPrefs(false),
+  debloat: () => loadUserPrefs(true),
   backup: () => loadLocalApps(),
   settings: () => loadSettings(),
 }
@@ -569,7 +569,7 @@ if ($packageFilter) {
   $packageFilter.addEventListener('change', function(e) {
     const value = e.target.value
     window.localStorage.setItem('packageFilter', value)
-    loadUserPrefs(false)
+    loadUserPrefs(true)
   })
 }
 
