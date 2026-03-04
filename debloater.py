@@ -94,7 +94,7 @@ class JsonDB:
                 try:
                     data = json.load(fd)
                 except JSONDecodeError as e:
-                    print(f'ERROR: failed reading JSON from {self.path}: {e}')
+                    log.error(f'Failed reading JSON from {self.path}: {e}')
                     data = dict()
                 self.data = data
                 return data
