@@ -15,7 +15,7 @@ from src.logs import log
 from src.services import debloat_packages, backup_user_apps, backup_permissions, \
     restore_apps, restore_all_apps_permissions, update_package_prefs, restore_app_install_apks, \
     list_apps_in_local_folder_ex, ListPackages
-from src.utils import load_json, open_browser, open_local_file_or_folder
+from src.utils import load_json, open_browser, open_local_file_or_folder, is_url
 
 # web ui in this module
 
@@ -256,8 +256,8 @@ def serve_open_file(request, response):
     path = EXPOSED_FILES.get(code_name)
     if path:
         path = str(path)
-        if not path.startswith('https:') and not path.startswith('http:'):
-            open_local_file_or_folder(str(path))
+        if not is_url(path):
+            open_local_file_or_folder(path)
     return {'OK': True}
 
 

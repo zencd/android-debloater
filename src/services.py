@@ -140,17 +140,10 @@ def restore_all_apps_permissions():
 
 def restore_app_permission(package, perm, grant: bool):
     perm = normalize_perm(perm)
-
-    if not adb.grant_or_revoke(package, perm, grant):
-        return False
-
-    if not adb.set_permission_flag(package, perm, 'user-set'):
-        return False
-
-    if not adb.set_permission_flag(package, perm, 'user-fixed'):
-        return False
-
-    return True
+    return True \
+        and adb.grant_or_revoke(package, perm, grant) \
+        and adb.set_permission_flag(package, perm, 'user-set') \
+        and adb.set_permission_flag(package, perm, 'user-fixed')
 
 
 def restore_apps():

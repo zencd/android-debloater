@@ -14,6 +14,10 @@ from src.logs import log
 
 # abstract utils in this module
 
+def is_url(url):
+    return url.startswith('https:') or url.startswith('http:')
+
+
 def ensure_key(data: dict, key: str, default_maker):
     if key in data:
         return data[key]
