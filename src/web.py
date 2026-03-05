@@ -12,9 +12,8 @@ from src import adb
 from src.apk_meta import ExtractApkMeta
 from src.defs import *
 from src.logs import log
-from src.services import debloat_packages, backup_user_apps, backup_permissions, \
-    restore_apps, restore_all_apps_permissions, update_package_prefs, restore_app_install_apks, \
-    list_apps_in_local_folder_ex, ListPackages
+from src.services import backup_permissions, restore_apps, update_package_prefs, restore_app_install_apks, \
+    list_apps_in_local_folder_ex, ListPackages, BackupUserApps, RestoreAllAppsPermissions, DebloatPackages
 from src.utils import load_json, open_browser, open_local_file_or_folder, is_url
 
 # web ui in this module
@@ -127,7 +126,7 @@ def serve_download_uad_list(request, response):
 def serve_list_packages(request, response):
     # todo exception here not shown in UI
     filter_ = request.query.get('filter', '')
-    packages_list = ListPackages().list_packages_by_filter(filter_)
+    packages_list = ListPackages().perform(filter_)
     response.content_type = CT_JSON
     device_name, warn_msg = adb.read_device_name()
     return {'status': 'OK',
@@ -147,13 +146,13 @@ def serve_change_package_resolution(request, response):
 
 
 def serve_debloat(request, response):
-    oks, fails = debloat_packages()
+    oks, fails = DebloatPackages().perform()
     response.content_type = CT_JSON
     return {'oks': oks, 'fails': fails}
 
 
 def serve_backup_apps(request, response):
-    num_apps_downloaded, msg = backup_user_apps()
+    num_apps_downloaded, msg = BackupUserApps().perform()
     response.content_type = CT_JSON
     return {'status': 'OK',
             'numAppsDownloaded': num_apps_downloaded,
@@ -175,7 +174,7 @@ def serve_restore_apps(request, response):
 
 
 def serve_restore_all_apps_permissions(request, response):
-    total_oks, total_fails = restore_all_apps_permissions()
+    total_oks, total_fails = RestoreAllAppsPermissions().perform()
     response.content_type = CT_JSON
     return {'oks': total_oks, 'fails': total_fails}
 

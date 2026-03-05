@@ -61,41 +61,41 @@ def update_package_prefs(package, action):
     dump_resolutions(USER_PREFS, resolutions)
 
 
-def backup_apks_for_package(package: str) -> bool:
-    final_app_folder = APKS_DIR / package
-    if final_app_folder.exists():
-        return False
-    apk_paths = adb.list_apk_paths_on_device(package)
-    if not apk_paths:
-        return False
-    with tempfile.TemporaryDirectory() as tmp_dir_:
-        tmp_dir = Path(tmp_dir_)
-        cwd_before = os.getcwd()
-        try:
-            os.chdir(tmp_dir)
-            for apk_path in apk_paths:
-                adb.pull_apk(apk_path)
-            ensure_dir(APKS_DIR)
-            if final_app_folder.exists():
-                shutil.rmtree(final_app_folder)
-            os.chdir(cwd_before)  # XXX windows: we must leave the folder before renaming it
-            shutil.move(tmp_dir, final_app_folder)
-        finally:
-            os.chdir(cwd_before)
-    return True
+class BackupUserApps:
+    def perform(self):
+        num_local_apps = len(list_apps_in_local_folder())
+        if num_local_apps > 0:
+            return 0, f'There are {num_local_apps} local apps already downloaded in {APKS_DIR}. Remove them first if you want a new backup procedure.'
+        num_apps_downloaded = 0
+        ensure_dir(APKS_DIR)
+        packages = adb.list_device_user_installed_packages()
+        for package in packages:
+            if self.backup_apks_for_package(package):
+                num_apps_downloaded += 1
+        return num_apps_downloaded, ''
 
-
-def backup_user_apps():
-    num_local_apps = len(list_apps_in_local_folder())
-    if num_local_apps > 0:
-        return 0, f'There are {num_local_apps} local apps already downloaded in {APKS_DIR}. Remove them first if you want a new backup procedure.'
-    num_apps_downloaded = 0
-    ensure_dir(APKS_DIR)
-    packages = adb.list_device_user_installed_packages()
-    for package in packages:
-        if backup_apks_for_package(package):
-            num_apps_downloaded += 1
-    return num_apps_downloaded, ''
+    def backup_apks_for_package(self, package: str) -> bool:
+        final_app_folder = APKS_DIR / package
+        if final_app_folder.exists():
+            return False
+        apk_paths = adb.list_apk_paths_on_device(package)
+        if not apk_paths:
+            return False
+        with tempfile.TemporaryDirectory() as tmp_dir_:
+            tmp_dir = Path(tmp_dir_)
+            cwd_before = os.getcwd()
+            try:
+                os.chdir(tmp_dir)
+                for apk_path in apk_paths:
+                    adb.pull_apk(apk_path)
+                ensure_dir(APKS_DIR)
+                if final_app_folder.exists():
+                    shutil.rmtree(final_app_folder)
+                os.chdir(cwd_before)  # XXX windows: we must leave the folder before renaming it
+                shutil.move(tmp_dir, final_app_folder)
+            finally:
+                os.chdir(cwd_before)
+        return True
 
 
 def backup_permissions():
@@ -124,26 +124,26 @@ def restore_app_install_apks(package):
     return rc
 
 
-def restore_all_apps_permissions():
-    assert ALL_PERMISSIONS_FILE.exists(), f'No permissions file found. Backup them first.'
-    oks, fails = 0, 0
-    device_packages = adb.list_device_enabled_packages()
-    for package, perm, grant in parse_perm_file(ALL_PERMISSIONS_FILE):
-        if package not in device_packages:
-            continue
-        if restore_app_permission(package, perm, grant):
-            oks += 1
-        else:
-            fails += 1
-    return oks, fails
+class RestoreAllAppsPermissions:
+    def perform(self):
+        assert ALL_PERMISSIONS_FILE.exists(), f'No permissions file found. Backup them first.'
+        oks, fails = 0, 0
+        device_packages = adb.list_device_enabled_packages()
+        for package, perm, grant in parse_perm_file(ALL_PERMISSIONS_FILE):
+            if package not in device_packages:
+                continue
+            if self.restore_app_permission(package, perm, grant):
+                oks += 1
+            else:
+                fails += 1
+        return oks, fails
 
-
-def restore_app_permission(package, perm, grant: bool):
-    perm = normalize_perm(perm)
-    return True \
-        and adb.grant_or_revoke(package, perm, grant) \
-        and adb.set_permission_flag(package, perm, 'user-set') \
-        and adb.set_permission_flag(package, perm, 'user-fixed')
+    def restore_app_permission(self, package, perm, grant: bool):
+        perm = normalize_perm(perm)
+        return True \
+            and adb.grant_or_revoke(package, perm, grant) \
+            and adb.set_permission_flag(package, perm, 'user-set') \
+            and adb.set_permission_flag(package, perm, 'user-fixed')
 
 
 def restore_apps():
@@ -165,7 +165,7 @@ def restore_apps():
 class ListPackages:
     FILTER_TO_STATUS = {'deviceUninstalled': 'uninstalled', 'deviceDisabled': 'disabled'}
 
-    def list_packages_by_filter(self, filter_: str):
+    def perform(self, filter_: str):
         resolutions = load_plain_resolutions(USER_PREFS)
         if filter_ in {'keep', 'del', 'review'}:
             resolution = filter_
@@ -256,31 +256,32 @@ class ListPackages:
             yield pak_data
 
 
-def debloat_packages():
-    def list_device_packages_to_debloat():
+class DebloatPackages:
+    def perform(self):
+        oks, fails = 0, 0
+        packages = self.list_device_packages_to_debloat()
+        packages = sorted(packages)
+        for package in packages:
+            log.debug(f'Deleting package: {package}')
+            rc, stdout, stderr = adb.uninstall_or_disable_package(package)
+            if rc == 0:
+                log.debug('OK')
+                oks += 1
+            else:
+                log.debug('FAIL')
+                fails += 1
+        return oks, fails
+
+    def list_device_packages_to_debloat(self):
         caches = adb.PackageCaches()
         enabled_packages = caches.enabled.get()
-        user_to_del = list_packages_user_want_delete()
+        user_to_del = self.list_packages_user_want_delete()
         packages_to_delete = user_to_del.intersection(enabled_packages)
         return sorted(packages_to_delete)
 
-    def list_packages_user_want_delete():
+    def list_packages_user_want_delete(self):
         resolutions = load_plain_resolutions(USER_PREFS)
         packages: list[str] = [r.package
                                for r in resolutions.items
                                if r.resolution == 'del']
         return set(packages)
-
-    oks, fails = 0, 0
-    packages = list_device_packages_to_debloat()
-    packages = sorted(packages)
-    for package in packages:
-        log.debug(f'Deleting package: {package}')
-        rc, stdout, stderr = adb.uninstall_or_disable_package(package)
-        if rc == 0:
-            log.debug('OK')
-            oks += 1
-        else:
-            log.debug('FAIL')
-            fails += 1
-    return oks, fails
