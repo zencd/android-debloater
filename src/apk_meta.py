@@ -13,7 +13,7 @@ from src.db import app_meta_db
 from src.logs import log
 from src import adb
 
-# this module is for gathering meta info about apk files like title, version and icon
+# module: gathering meta info about apk files like (title, version, icon)
 
 class ExtractApkMeta:
 

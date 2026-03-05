@@ -12,7 +12,7 @@ from src.user_prefs import load_plain_resolutions
 from src.utils import ensure_dir, ensure_key, load_json
 
 
-# module for business logics
+# module: business logics
 
 
 def list_apps_in_local_folder() -> set[str]:

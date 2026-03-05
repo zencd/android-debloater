@@ -16,7 +16,7 @@ from src.services import backup_permissions, restore_apps, update_package_prefs,
     list_apps_in_local_folder_ex, ListPackages, BackupUserApps, RestoreAllAppsPermissions, DebloatPackages
 from src.utils import load_json, open_browser, open_local_file_or_folder, is_url
 
-# web ui in this module
+# module: web ui
 
 EXPOSED_FILES = {
     'appProfileFolder': PROFILE_DIR,

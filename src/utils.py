@@ -12,7 +12,7 @@ from src.defs import *
 from src.logs import log
 
 
-# abstract utils in this module
+# module: abstract utils
 
 def is_url(url):
     return url.startswith('https:') or url.startswith('http:')

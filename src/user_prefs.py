@@ -7,7 +7,7 @@ from src.defs import *
 from src.utils import ensure_dir
 
 
-# user prefs, a custom data format
+# module: custom file format for user prefs (debloat, keep, review)
 
 
 @dataclasses.dataclass

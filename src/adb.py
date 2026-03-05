@@ -5,6 +5,7 @@ from functools import cache
 from src.logs import audit, log
 from src.utils import exec_, extract_block
 
+# module: abstract adb utils
 
 class PackageCache:
     def __init__(self, cmd: str):
