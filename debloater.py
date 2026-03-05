@@ -14,7 +14,6 @@ from src.logs import log
 # todo have a local uad_lists.json copy
 # todo recommended => safe
 # todo reload packages once at backend?
-# todo resolve language for the first time from browser
 # todo set PYTHONIOENCODING?
 
 

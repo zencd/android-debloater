@@ -8,7 +8,18 @@
 <link rel="stylesheet" href="/static/main.css">
 <link rel="stylesheet" href="/static/lib/toastify.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<script>var gLang = window.localStorage.getItem('appLang') || 'en'; document.write(`<body data-lang="${gLang}">\n`);</script>
+<script>
+  function resolveBrowserLanguage() {
+    const languages = navigator.languages || [navigator.language || navigator.userLanguage]
+    for (let lang of languages) {
+      if (lang.toLowerCase().startsWith('ru'))
+        return 'ru'
+    }
+    return 'en'
+  }
+  var gLang = window.localStorage.getItem('appLang') || resolveBrowserLanguage() || 'en';
+  document.write(`<body data-lang="${gLang}">\n`);
+</script>
 <main class="container">
   <h2 class="topNav">
     <a id="menuDebloat" data-tab="debloat" class="current">⊖ <en>Debloat</en><ru>Пакеты</ru></a>
