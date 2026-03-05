@@ -4,7 +4,6 @@ import subprocess
 import sys
 
 from src.defs import *
-from src import web
 from src.logs import log
 
 
@@ -58,10 +57,15 @@ def ensure_pyaxmlparser():
     logging.getLogger('pyaxmlparser').setLevel(logging.ERROR)  # fighting frequent warning "res1 is not zero"
 
 
+def start_web():
+    from src import web
+    web.main_vanilla()
+
+
 if __name__ == '__main__':
     assert sys.version_info >= MIN_PY_VER, f'Python {".".join(map(str, MIN_PY_VER))} or newer is required. You have: {sys.version}'
     if not running_in_venv():
         restart_process_in_venv()
     log.info(f'Python interpreter: {sys.executable}')
     ensure_pyaxmlparser()
-    web.main_vanilla()
+    start_web()
