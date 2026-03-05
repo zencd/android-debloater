@@ -1,5 +1,4 @@
 import os.path
-import re
 import shutil
 import tempfile
 
@@ -10,35 +9,10 @@ from src.logs import log
 from src.perm_fmt import normalize_perm, parse_perm_file, PermFileWriter
 from src.user_prefs import ResolutionList, Resolution, dump_resolutions
 from src.user_prefs import load_plain_resolutions
-from src.utils import ensure_dir, exec_, extract_block, ensure_key, load_json
+from src.utils import ensure_dir, ensure_key, load_json
 
 
-# business logics in this module
-
-def list_packages_user_want_delete():
-    resolutions = load_plain_resolutions(USER_PREFS)
-    packages: list[str] = [r.package
-                           for r in resolutions.items
-                           if r.resolution == 'del']
-    return set(packages)
-
-
-def list_device_packages_to_debloat():
-    caches = adb.PackageCaches()
-    enabled_packages = caches.enabled.get()
-    user_to_del = list_packages_user_want_delete()
-    packages_to_delete = user_to_del.intersection(enabled_packages)
-    return sorted(packages_to_delete)
-
-
-def enrich_packages_with_known_meta(packages: list):
-    packages_meta = ensure_key(app_meta_db.data, 'packages', lambda: dict())
-    for pak_data in packages:
-        pak_name = pak_data['package']
-        pak_meta = packages_meta.get(pak_name) or dict()
-        pak_data['title'] = pak_meta.get('title')
-        pak_data['icon'] = pak_meta.get('icon')
-        yield pak_data
+# module for business logics
 
 
 def list_apps_in_local_folder() -> set[str]:
@@ -74,10 +48,6 @@ def list_apps_in_local_folder_ex():
     return res, is_device_connected
 
 
-####################################################
-## SERVICE LAYER
-####################################################
-
 def update_package_prefs(package, action):
     resolutions = load_plain_resolutions(USER_PREFS)
     r = resolutions.get_resolution(package)
@@ -104,9 +74,7 @@ def backup_apks_for_package(package: str) -> bool:
         try:
             os.chdir(tmp_dir)
             for apk_path in apk_paths:
-                cmd = ['adb', 'pull', apk_path]
-                rc, stdout, stderr = exec_(cmd, stdout=None, stderr=None)
-                assert rc == 0, f'ADB failed with code: {rc}'
+                adb.pull_apk(apk_path)
             ensure_dir(APKS_DIR)
             if final_app_folder.exists():
                 shutil.rmtree(final_app_folder)
@@ -152,8 +120,7 @@ def restore_app_install_apks(package):
     apks = list(map(str, apks))
     rc = 1
     if apks:
-        cmd = ['adb', 'install-multiple'] + apks
-        rc, _, _ = exec_(cmd, stdout=None, stderr=None)
+        rc = adb.install_multiple(apks)
     return rc
 
 
@@ -173,19 +140,14 @@ def restore_all_apps_permissions():
 
 def restore_app_permission(package, perm, grant: bool):
     perm = normalize_perm(perm)
-    grant_or_revoke = 'grant' if grant else 'revoke'
-    rc, _, _ = exec_(['adb', 'shell', 'pm', grant_or_revoke, package, perm], stdout=None, stderr=None)
-    if rc != 0:
+
+    if not adb.grant_or_revoke(package, perm, grant):
         return False
 
-    exec_(['adb', 'shell', 'pm', 'set-permission-flags', package, perm, 'user-set'],
-          stdout=None, stderr=None)
-    if rc != 0:
+    if not adb.set_permission_flag(package, perm, 'user-set'):
         return False
 
-    exec_(['adb', 'shell', 'pm', 'set-permission-flags', package, perm, 'user-fixed'],
-          stdout=None, stderr=None)
-    if rc != 0:
+    if not adb.set_permission_flag(package, perm, 'user-fixed'):
         return False
 
     return True
@@ -223,7 +185,7 @@ class ListPackages:
             packages_list = [
                 self.package_to_dict(caches, package, uad_packages, resolutions, common_package_status)
                 for package in packages]
-        packages_list = list(enrich_packages_with_known_meta(packages_list))
+        packages_list = list(self.enrich_packages_with_known_meta(packages_list))
         packages_list = sorted(packages_list, key=lambda x: x['package'])
         return packages_list
 
@@ -291,8 +253,31 @@ class ListPackages:
             return 'enabled'
         return ''
 
+    def enrich_packages_with_known_meta(self, packages: list):
+        packages_meta = ensure_key(app_meta_db.data, 'packages', lambda: dict())
+        for pak_data in packages:
+            pak_name = pak_data['package']
+            pak_meta = packages_meta.get(pak_name) or dict()
+            pak_data['title'] = pak_meta.get('title')
+            pak_data['icon'] = pak_meta.get('icon')
+            yield pak_data
+
 
 def debloat_packages():
+    def list_device_packages_to_debloat():
+        caches = adb.PackageCaches()
+        enabled_packages = caches.enabled.get()
+        user_to_del = list_packages_user_want_delete()
+        packages_to_delete = user_to_del.intersection(enabled_packages)
+        return sorted(packages_to_delete)
+
+    def list_packages_user_want_delete():
+        resolutions = load_plain_resolutions(USER_PREFS)
+        packages: list[str] = [r.package
+                               for r in resolutions.items
+                               if r.resolution == 'del']
+        return set(packages)
+
     oks, fails = 0, 0
     packages = list_device_packages_to_debloat()
     packages = sorted(packages)

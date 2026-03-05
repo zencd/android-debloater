@@ -43,6 +43,29 @@ class PackageCaches:
         return self.user_installed.get()
 
 
+def grant_or_revoke(package: str, perm: str, grant: bool):
+    str_cmd = 'grant' if grant else 'revoke'
+    rc, _, _ = exec_(['adb', 'shell', 'pm', str_cmd, package, perm], stdout=None, stderr=None)
+    return rc == 0
+
+
+def set_permission_flag(package: str, perm: str, flag: str):
+    rc, _, _ = exec_(['adb', 'shell', 'pm', 'set-permission-flags', package, perm, flag], stdout=None, stderr=None)
+    return rc == 0
+
+
+def install_multiple(apk_paths: list[str]):
+    cmd = ['adb', 'install-multiple'] + apk_paths
+    rc, _, _ = exec_(cmd, stdout=None, stderr=None)
+    return rc
+
+
+def pull_apk(apk_path):
+    cmd = ['adb', 'pull', apk_path]
+    rc, stdout, stderr = exec_(cmd, stdout=None, stderr=None)
+    assert rc == 0, f'ADB failed with code: {rc}'
+
+
 def read_user_set_permissions(package):
     lines = dumpsys_package(package)
     lines = extract_block(lines, r'^Packages:$', r'^\w.*$')

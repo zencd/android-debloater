@@ -5,6 +5,7 @@ import tempfile
 from src.defs import *
 from src.logs import log
 
+# custom format for storing package permissions
 
 class PermFileWriter:
 
