@@ -1,3 +1,4 @@
+import dataclasses
 import json
 import os.path
 import os.path
@@ -13,6 +14,26 @@ from src.logs import log
 
 
 # module: abstract utils
+
+@dataclasses.dataclass
+class Counters:
+    oks = 0
+    fails = 0
+
+    def increment_rc(self, rc: int):
+        assert type(rc) == int
+        if rc == 0:
+            self.oks += 1
+        else:
+            self.fails += 1
+
+    def increment_bool(self, ok: bool):
+        assert type(ok) == bool
+        if ok:
+            self.oks += 1
+        else:
+            self.fails += 1
+
 
 def is_url(url):
     return url.startswith('https:') or url.startswith('http:')

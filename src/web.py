@@ -14,7 +14,7 @@ from src.defs import *
 from src.logs import log
 from src.services import backup_permissions, restore_apps, update_package_prefs, restore_app_install_apks, \
     list_apps_in_local_folder_ex, ListPackages, BackupUserApps, RestoreAllAppsPermissions, DebloatPackages
-from src.utils import load_json, open_browser, open_local_file_or_folder, is_url
+from src.utils import load_json, open_browser, open_local_file_or_folder, is_url, Counters
 
 # module: web ui
 
@@ -146,9 +146,9 @@ def serve_change_package_resolution(request, response):
 
 
 def serve_debloat(request, response):
-    oks, fails = DebloatPackages().perform()
+    oks_fails = DebloatPackages().perform()
     response.content_type = CT_JSON
-    return {'oks': oks, 'fails': fails}
+    return {'oks': oks_fails.oks, 'fails': oks_fails.fails}
 
 
 def serve_backup_apps(request, response):
@@ -168,15 +168,15 @@ def serve_backup_app_permissions(request, response):
 
 
 def serve_restore_apps(request, response):
-    num_ok, num_fail = restore_apps()
+    oks_fails = restore_apps()
     response.content_type = CT_JSON
-    return {'status': 'OK', 'oks': num_ok, 'fails': num_fail}
+    return {'status': 'OK', 'oks': oks_fails.oks, 'fails': oks_fails.fails}
 
 
 def serve_restore_all_apps_permissions(request, response):
-    total_oks, total_fails = RestoreAllAppsPermissions().perform()
+    oks_fails = RestoreAllAppsPermissions().perform()
     response.content_type = CT_JSON
-    return {'oks': total_oks, 'fails': total_fails}
+    return {'oks': oks_fails.oks, 'fails': oks_fails.fails}
 
 
 def serve_restore_app(request, response):
@@ -200,16 +200,13 @@ def serve_load_local_apps(request, response):
 
 def serve_read_device_apps_meta(request, response):
     extractor = ExtractApkMeta()
-    oks, fails = 0, 0
+    oks_fails = Counters()
     for package in adb.list_device_all_packages():
         if package not in extractor.app_meta_packages:
             ok = extractor.extract(package)
-            if ok:
-                oks += 1
-            else:
-                fails += 1
+            oks_fails.increment_bool(ok)
     response.content_type = CT_JSON
-    return {'status': 'OK', 'oks': oks, 'fails': fails}
+    return {'status': 'OK', 'oks': oks_fails.oks, 'fails': oks_fails.fails}
 
 
 def static_file(fname: str, mode='rb', base_dir='.'):

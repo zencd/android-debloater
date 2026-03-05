@@ -9,7 +9,7 @@ from src.logs import log
 from src.perm_fmt import normalize_perm, parse_perm_file, PermFileWriter
 from src.user_prefs import ResolutionList, Resolution, dump_resolutions
 from src.user_prefs import load_plain_resolutions
-from src.utils import ensure_dir, ensure_key, load_json
+from src.utils import ensure_dir, ensure_key, load_json, Counters
 
 
 # module: business logics
@@ -127,16 +127,14 @@ def restore_app_install_apks(package):
 class RestoreAllAppsPermissions:
     def perform(self):
         assert ALL_PERMISSIONS_FILE.exists(), f'No permissions file found. Backup them first.'
-        oks, fails = 0, 0
+        oks_fails = Counters()
         device_packages = adb.list_device_enabled_packages()
         for package, perm, grant in parse_perm_file(ALL_PERMISSIONS_FILE):
             if package not in device_packages:
                 continue
-            if self.restore_app_permission(package, perm, grant):
-                oks += 1
-            else:
-                fails += 1
-        return oks, fails
+            ok = self.restore_app_permission(package, perm, grant)
+            oks_fails.increment_bool(ok)
+        return oks_fails
 
     def restore_app_permission(self, package, perm, grant: bool):
         perm = normalize_perm(perm)
@@ -150,16 +148,11 @@ def restore_apps():
     device_packages = adb.list_device_all_packages()
     local_packages = list_apps_in_local_folder()
     missing_on_device = local_packages - device_packages
-    num_ok, num_fail = 0, 0
+    oks_fails = Counters()
     for package in missing_on_device:
         rc = restore_app_install_apks(package)
-        if rc == 0:
-            num_ok += 1
-        else:
-            num_fail += 1
-    # for package in local_packages:
-    #     restore_app_permissions(package)
-    return num_ok, num_fail
+        oks_fails.increment_rc(rc)
+    return oks_fails
 
 
 class ListPackages:
@@ -258,19 +251,14 @@ class ListPackages:
 
 class DebloatPackages:
     def perform(self):
-        oks, fails = 0, 0
+        oks_fails = Counters()
         packages = self.list_device_packages_to_debloat()
         packages = sorted(packages)
         for package in packages:
             log.debug(f'Deleting package: {package}')
             rc, stdout, stderr = adb.uninstall_or_disable_package(package)
-            if rc == 0:
-                log.debug('OK')
-                oks += 1
-            else:
-                log.debug('FAIL')
-                fails += 1
-        return oks, fails
+            oks_fails.increment_rc(rc)
+        return oks_fails
 
     def list_device_packages_to_debloat(self):
         caches = adb.PackageCaches()
