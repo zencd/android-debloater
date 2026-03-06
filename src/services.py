@@ -16,10 +16,10 @@ from src.utils import ensure_dir, ensure_key, load_json, Counters
 
 
 def list_apps_in_local_folder() -> set[str]:
-    if not APKS_DIR.exists():
+    if not APK_DIR.exists():
         return set()
     packages = set()
-    for child in APKS_DIR.iterdir():
+    for child in APK_DIR.iterdir():
         if not child.is_dir():
             continue
         if not list(child.glob('*.apk')):
@@ -65,9 +65,9 @@ class BackupUserApps:
     def perform(self):
         num_local_apps = len(list_apps_in_local_folder())
         if num_local_apps > 0:
-            return 0, f'There are {num_local_apps} local apps already downloaded in {APKS_DIR}. Remove them first if you want a new backup procedure.'
+            return 0, f'There are {num_local_apps} local apps already downloaded in {APK_DIR}. Remove them first if you want a new backup procedure.'
         num_apps_downloaded = 0
-        ensure_dir(APKS_DIR)
+        ensure_dir(APK_DIR)
         packages = adb.list_device_user_installed_packages()
         for package in packages:
             if self.backup_apks_for_package(package):
@@ -75,7 +75,7 @@ class BackupUserApps:
         return num_apps_downloaded, ''
 
     def backup_apks_for_package(self, package: str) -> bool:
-        final_app_folder = APKS_DIR / package
+        final_app_folder = APK_DIR / package
         if final_app_folder.exists():
             return False
         apk_paths = adb.list_apk_paths_on_device(package)
@@ -88,7 +88,7 @@ class BackupUserApps:
                 os.chdir(tmp_dir)
                 for apk_path in apk_paths:
                     adb.pull_apk(apk_path)
-                ensure_dir(APKS_DIR)
+                ensure_dir(APK_DIR)
                 if final_app_folder.exists():
                     shutil.rmtree(final_app_folder)
                 os.chdir(cwd_before)  # XXX windows: we must leave the folder before renaming it
@@ -114,7 +114,7 @@ def backup_permissions():
 
 
 def restore_app_install_apks(package):
-    app_local_folder = APKS_DIR / package
+    app_local_folder = APK_DIR / package
     assert app_local_folder.exists()
     apks = app_local_folder.glob('*.apk')
     apks = list(map(str, apks))
