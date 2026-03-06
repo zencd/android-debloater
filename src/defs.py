@@ -20,7 +20,7 @@ PROJECT_DIR = Path(__file__).parent.parent
 STD_PERM_PFX = 'android.permission.'
 
 UAD_LOCAL = APP_HOME / 'uad_lists.json'
-UAD_PROJECT = PROJECT_DIR / 'uad_lists.json'
+UAD_PROJECT = PROJECT_DIR / 'data/uad_lists.json'
 USER_PREFS = APP_HOME / 'user-prefs.txt'
 APP_ICON_DIR = APP_HOME / 'icons'
 APP_ICON_DIR.mkdir(parents=True, exist_ok=True)
