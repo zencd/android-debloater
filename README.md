@@ -25,6 +25,6 @@
 
 ## Tested with
 
-- Xiaomi 12x, Poco X4 GT, Poco X7 Pro, Pixel 5a, Pixel 7, Oneplus 13T, Oneplus 15, Moto X50 Ultra
+- Xiaomi 12x, Poco X4 GT, Poco X7 Pro, Pixel 5a, Pixel 7, Oneplus 13T, Oneplus 15, Moto X50 Ultra, Revvl 7 Pro, Lenovo Tab P11
 - ADB 36.0.2, protocol 1.0.41 
 - MacOS 15.7, Windows 10
