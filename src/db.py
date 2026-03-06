@@ -35,7 +35,7 @@ class JsonDB:
         assert self.data is not None
         with open(tmp, 'w', encoding='utf-8') as fd:
             json.dump(self.data, fp=fd, ensure_ascii=False, indent=2)
-        os.rename(tmp, self.path)
+        os.replace(tmp, self.path)
 
 
 app_meta_db = JsonDB(APP_META_PATH)
