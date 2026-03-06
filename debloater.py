@@ -80,7 +80,7 @@ def main():
         restart_process_in_venv()
     log.info(f'Python interpreter: {sys.executable}')
     ensure_pyaxmlparser()
-    if not UAD_LOCAL.exists():
+    if not UAD_LOCAL.exists() and UAD_PROJECT.exists():
         shutil.copyfile(UAD_PROJECT, UAD_LOCAL)
     # compress_file(Path('uad_lists.json'), Path('uad_lists.json.gz'))
     start_web()
