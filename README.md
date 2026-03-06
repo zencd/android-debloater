@@ -3,8 +3,8 @@
 ## Prepare
 
 - Download this Python script:
-  - unpack https://github.com/zencd/debloater/archive/refs/heads/master.zip
-  - or `git clone --branch master --depth 1 "https://github.com/zencd/debloater"`
+  - unpack https://github.com/zencd/android-debloater/archive/refs/heads/master.zip
+  - or `git clone --branch master --depth 1 "https://github.com/zencd/android-debloater"`
 - Install Python 3.9+ ([MS Store](https://apps.microsoft.com/search?query=python))
 - Install `adb`, add it to the PATH
   - `brew install android-platform-tools` (macos)
