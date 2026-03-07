@@ -108,15 +108,15 @@ function addCard(package, title, icon, description, tags, action, status) {
   const titleOpt = title ? `<div class="title" translate="no">${escapeHtml(title)}</div>` : ''
 
   const labelNew = gLang === 'en' ? 'N/A' : 'Нет'
-  const labelKeep = gLang === 'en' ? 'Keep' : 'Оставить'
+  const labelKeep = gLang === 'en' ? 'Keep' : 'Оставляем'
   const labelReview = gLang === 'en' ? 'Review' : 'Ревью'
-  const labelDebloat = gLang === 'en' ? 'Debloat' : 'Удалить'
+  const labelDebloat = gLang === 'en' ? 'Debloat' : 'Удаляем'
 
   const labelEnabled = gLang === 'en' ? 'Enabled:' : 'Активно:'
   const labelDisabled = gLang === 'en' ? 'Disabled:' : 'Отключено:'
   const labelUninstalled = gLang === 'en' ? 'Uninstalled:' : 'Удалено:'
 
-  const labelReinstall = gLang === 'en' ? 'Reinstall' : 'Установить'
+  const labelReinstall = gLang === 'en' ? 'Install' : 'Установить'
   const labelDisable = gLang === 'en' ? 'Disable' : 'Отключить'
   const labelEnable = gLang === 'en' ? 'Enable' : 'Включить'
   const labelUninstall = gLang === 'en' ? 'Uninstall' : 'Удалить'
