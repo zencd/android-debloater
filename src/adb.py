@@ -2,6 +2,7 @@ import re
 import shlex
 from functools import cache
 
+from src import AbortException
 from src.logs import audit, log
 from src.utils import exec_, extract_block
 
@@ -14,7 +15,8 @@ class PackageCache:
     @cache
     def get(self) -> set[str]:
         rc, stdout, stderr = exec_(self.cmd)
-        assert rc == 0, f'Command failed with rc: {rc}, text: {stderr}'
+        if rc != 0:
+            raise AbortException(f'Command failed with rc: {rc}, text: {stderr}')
         lines = stdout.splitlines()
         return set(extract_package_names(lines))
 
@@ -64,7 +66,8 @@ def install_multiple(apk_paths: list[str]):
 def pull_apk(apk_path):
     cmd = ['adb', 'pull', apk_path]
     rc, stdout, stderr = exec_(cmd, stdout=None, stderr=None)
-    assert rc == 0, f'ADB failed with code: {rc}'
+    if rc != 0:
+        raise AbortException(f'ADB failed with code: {rc}')
 
 
 def read_user_set_permissions(package):
@@ -83,7 +86,8 @@ def read_user_set_permissions(package):
 def dumpsys_package(package):
     cmd = ['adb', 'shell', 'dumpsys', 'package', package]
     rc, stdout, stderr = exec_(cmd)
-    assert rc == 0, f'ADB failed with code: {rc}'
+    if rc != 0:
+        raise AbortException(f'ADB failed with code: {rc}')
     return stdout.splitlines()
 
 
@@ -128,28 +132,32 @@ def uninstall_or_disable_package(package):
 
 def list_device_enabled_packages():
     rc, stdout, stderr = exec_(shlex.split('adb shell pm list packages -e --user 0'))
-    assert rc == 0, f'ADB failed with code: {rc}'
+    if rc != 0:
+        raise AbortException(f'ADB failed with code: {rc}')
     lines = stdout.splitlines()
     return set(extract_package_names(lines))
 
 
 def list_device_all_packages():
     rc, stdout, stderr = exec_(shlex.split('adb shell pm list packages --user 0'))
-    assert rc == 0, f'ADB failed with code: {rc}'
+    if rc != 0:
+        raise AbortException(f'ADB failed with code: {rc}')
     lines = stdout.splitlines()
     return set(extract_package_names(lines))
 
 
 def list_device_user_installed_packages() -> set[str]:
     rc, stdout, stderr = exec_(shlex.split('adb shell pm list packages -3 --user 0'))
-    assert rc == 0, f'ADB failed with code: {rc}'
+    if rc != 0:
+        raise AbortException(f'ADB failed with code: {rc}')
     lines = stdout.splitlines()
     return set(extract_package_names(lines))
 
 
 def list_apk_paths_on_device(package):
     rc, stdout, stderr = exec_(['adb', 'shell', 'pm', 'path', package])
-    assert rc == 0, f'ADB failed with code: {rc}'
+    if rc != 0:
+        raise AbortException(f'ADB failed with code: {rc}')
     lines = stdout.splitlines()
     return set(extract_package_names(lines))
 

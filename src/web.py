@@ -8,7 +8,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
-from src import adb
+from src import adb, AbortException
 from src.apk_meta import ExtractApkMeta
 from src.defs import *
 from src.logs import log
@@ -67,7 +67,10 @@ class MyWebHandler(BaseHTTPRequestHandler):
                 resp_obj = handler(request, response)
                 status_code = response.status_code or status_code
             except Exception as exc:
-                traceback.print_exc()
+                if isinstance(exc, AbortException):
+                    log.error(f'Web handler {path} failed: {exc}')
+                else:
+                    traceback.print_exc()
                 response.content_type = 'application/json; charset=utf-8'
                 status_code = 500
                 resp_obj = {'message': str(exc).strip(),
