@@ -29,6 +29,10 @@ function handleFetch(fetchPromise, onSuccess, doAlert) {
   });
 }
 
+function enru(english, russian) {
+  return gLang === 'ru' ? russian : english;
+}
+
 function loadUad() {
   handleFetch(fetch('/loadUad'), function(data) {
     const cls = data.ok ? 'toastOk' : 'toastError'
@@ -205,37 +209,49 @@ function onActionChange(e) {
 
   if (action === 'uninstall') {
     e.target.value = prevAction // select's value shouldn't change
-    handleFetch(fetch(`/changePackageStatus?package=${package}&action=uninstall`), function(data) {
-      const cls = data.ok ? 'toastOk' : 'toastError'
-      toast(data.msg, cls)
-    })
+    const msg = enru(`Uninstall ${package}?`, `Удалить ${package}?`)
+    if (confirm(msg)) {
+      handleFetch(fetch(`/changePackageStatus?package=${package}&action=uninstall`), function(data) {
+        const cls = data.ok ? 'toastOk' : 'toastError'
+        toast(data.msg, cls)
+      })
+    }
     return
   }
 
   if (action === 'reinstall') {
     e.target.value = prevAction // select's value shouldn't change
-    handleFetch(fetch(`/changePackageStatus?package=${package}&action=reinstall`), function(data) {
-      const cls = data.ok ? 'toastOk' : 'toastError'
-      toast(data.msg, cls)
-    })
+    const msg = enru(`Reinstall ${package}?`, `Переустановить ${package}?`)
+    if (confirm(msg)) {
+      handleFetch(fetch(`/changePackageStatus?package=${package}&action=reinstall`), function(data) {
+        const cls = data.ok ? 'toastOk' : 'toastError'
+        toast(data.msg, cls)
+      })
+    }
     return
   }
 
   if (action === 'enable') {
     e.target.value = prevAction // select's value shouldn't change
-    handleFetch(fetch(`/changePackageStatus?package=${package}&action=enable`), function(data) {
-      const cls = data.ok ? 'toastOk' : 'toastError'
-      toast(data.msg, cls)
-    })
+    const msg = enru(`Enable ${package}?`, `Включить ${package}?`)
+    if (confirm(msg)) {
+      handleFetch(fetch(`/changePackageStatus?package=${package}&action=enable`), function(data) {
+        const cls = data.ok ? 'toastOk' : 'toastError'
+        toast(data.msg, cls)
+      })
+    }
     return
   }
 
   if (action === 'disable') {
     e.target.value = prevAction // select's value shouldn't change
-    handleFetch(fetch(`/changePackageStatus?package=${package}&action=disable`), function(data) {
-      const cls = data.ok ? 'toastOk' : 'toastError'
-      toast(data.msg, cls)
-    })
+    const msg = enru(`Disable ${package}?`, `Отключить ${package}?`)
+    if (confirm(msg)) {
+      handleFetch(fetch(`/changePackageStatus?package=${package}&action=disable`), function(data) {
+        const cls = data.ok ? 'toastOk' : 'toastError'
+        toast(data.msg, cls)
+      })
+    }
     return
   }
 
@@ -369,7 +385,8 @@ function readAppMeta() {
 
 function loadSettings() {
   handleFetch(fetch('/settings'), function(data) {
-    const filesDoLink = ['appProfileFolder',
+    const filesDoLink = ['backupApkFolder',
+                         'backupPermFile',
                          'userDebloatFile',
                          'communityDebloatFile',
                          'communityDebloatUrl',

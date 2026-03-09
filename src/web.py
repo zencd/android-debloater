@@ -19,7 +19,8 @@ from src.utils import open_browser, open_local_file_or_folder, is_url, Counters
 # module: web ui
 
 EXPOSED_FILES = {
-    'appProfileFolder': PROFILE_DIR,
+    'backupApkFolder': APK_DIR,
+    'backupPermFile': ALL_PERMISSIONS_FILE,
     'userDebloatFile': USER_PREFS,
     'communityDebloatFile': UAD_LOCAL,
     'communityDebloatUrl': UAD_URL,
