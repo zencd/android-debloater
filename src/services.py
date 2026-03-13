@@ -5,6 +5,7 @@ import tempfile
 from src import adb
 from src.db import app_meta_db
 from src.defs import *
+from src.defs import UAD_LOCAL
 from src.logs import log
 from src.perm_fmt import normalize_perm, parse_perm_file, PermFileWriter
 from src.user_prefs import ResolutionList, Resolution, dump_resolutions

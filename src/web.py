@@ -4,7 +4,6 @@ import os.path
 import platform
 import sys
 import traceback
-import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 
@@ -14,7 +13,8 @@ from src.defs import *
 from src.logs import log
 from src.services import backup_permissions, restore_apps, update_package_prefs, restore_app_install_apks, \
     list_apps_in_local_folder_ex, ListPackages, BackupUserApps, RestoreAllAppsPermissions, DebloatPackages
-from src.utils import load_json, open_browser, open_local_file_or_folder, is_url, Counters
+from src.uad import download_uad_list
+from src.utils import open_browser, open_local_file_or_folder, is_url, Counters
 
 # module: web ui
 
@@ -108,22 +108,15 @@ class MyServer(ThreadingHTTPServer):
 
 
 def serve_download_uad_list(request, response):
-    try:
-        old = load_json(UAD_LOCAL, dict())
-    except json.JSONDecodeError:
-        old = dict()
-    urllib.request.urlretrieve(UAD_URL, UAD_LOCAL)
-    new = load_json(UAD_LOCAL, dict())
-    ok = len(new) > 0
-    msg_to_user = 'New data received' \
-        if len(new) != len(old) \
-        else f'Downloaded info about {len(new)} packages' if ok else 'x_x'
+    len_old, len_new = download_uad_list()
+    ok = len_new > 0
+    msg = f'Downloaded info about {len_new} packages ({(len_new - len_old):+})' if ok else 'Failed'
     response.content_type = CT_JSON
     return {'status': 'OK',
             'ok': ok,
-            'msg': msg_to_user,
-            'numPackagesBefore': len(old),
-            'numPackagesAfter': len(new)}
+            'msg': msg,
+            'numPackagesBefore': len_old,
+            'numPackagesAfter': len_new}
 
 
 def serve_list_packages(request, response):
