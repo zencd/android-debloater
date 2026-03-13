@@ -10,7 +10,7 @@ from src.logs import log
 from src.perm_fmt import normalize_perm, parse_perm_file, PermFileWriter
 from src.user_prefs import ResolutionList, Resolution, dump_resolutions
 from src.user_prefs import load_plain_resolutions
-from src.utils import ensure_dir, ensure_key, load_json, Counters
+from src.utils import ensure_dir, ensure_key, load_json_with_fallback, Counters
 
 
 # module: business logics
@@ -55,7 +55,7 @@ def update_package_prefs(package, action):
     if r:
         r.resolution = action
     else:
-        uad_package = load_json(UAD_LOCAL, dict()).get(package) or dict()
+        uad_package = load_json_with_fallback(UAD_LOCAL, dict()).get(package) or dict()
         comment = uad_package.get('description', '')
         r = Resolution(action, package, [], comment)
         resolutions.add(r)
@@ -164,7 +164,7 @@ class ListPackages:
             packages_list = list(self.filter_packages_by_user_prefs(resolutions, resolution))
         else:
             caches = adb.PackageCaches()
-            uad_packages: dict = load_json(UAD_LOCAL, dict())
+            uad_packages: dict = load_json_with_fallback(UAD_LOCAL, dict())
             common_package_status = self.__class__.FILTER_TO_STATUS.get(filter_) or ''
             packages = self.filter_packages(caches, uad_packages, resolutions, filter_)
             packages_list = [

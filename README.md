@@ -31,6 +31,6 @@
 
 ## Development
 
-Run tests:
+Start it within a venv.
 
-    python -m unittest
+Tests: `python -m unittest`

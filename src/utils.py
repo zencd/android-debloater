@@ -98,11 +98,15 @@ def exec_(cmd: list, stdout: Optional[int] = subprocess.PIPE, stderr: Optional[i
     return rc, stdout, stderr
 
 
-def load_json(fname, fallback):
-    if os.path.exists(fname):
-        with open(fname, encoding='utf-8') as fd:
+def load_json_with_fallback(path, fallback):
+    if os.path.exists(path):
+        with open(path, encoding='utf-8') as fd:
             return json.load(fd)
     return fallback
+
+def load_json(path):
+    with open(path, encoding='utf-8') as fd:
+        return json.load(fd)
 
 
 def read_text_lines(fname):
