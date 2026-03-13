@@ -5,28 +5,32 @@ import tempfile
 from src.defs import *
 from src.logs import log
 
+
 # module: custom file format for storing package permissions
 
 class PermFileWriter:
 
     def __init__(self, path: Path):
         self.path = path
-        self.temp_file = Path(tempfile.NamedTemporaryFile(suffix='.txt', delete=False).name)
+        self.temp_file = tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8')
+        self.cnt = 0
+
+    def write_permission(self, package: str, perm: str, granted: bool):
+        grant_str = 'grant' if granted else 'revoke'
+        self.temp_file.write(f"{package}  {shorten_perm(perm)}  {grant_str}\n")
+        self.cnt += 1
 
     def __enter__(self):
-        self.fp = open(self.temp_file, 'w', encoding='utf-8')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.fp:
-            self.fp.close()
-        log.debug(f'Moving {self.temp_file} to ${self.path}')
-        os.rename(self.temp_file, self.path)
-        return False
-
-    def write_line(self, package: str, perm: str, granted: bool):
-        grant_str = 'grant' if granted else 'revoke'
-        self.fp.write(f'{package}  {shorten_perm(perm)}  {grant_str}\n')
+        self.temp_file.close()
+        if exc_type is None:
+            log.debug(f'Move {self.temp_file} to ${self.path}')
+            os.replace(self.temp_file.name, self.path)
+        else:
+            log.debug(f'Remove {self.temp_file}')
+            os.remove(self.temp_file.name)
 
 
 def shorten_perm(perm: str):

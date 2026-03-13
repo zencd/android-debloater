@@ -101,16 +101,14 @@ class BackupUserApps:
 def backup_permissions():
     packages = adb.list_device_enabled_packages()
     perm_file = ALL_PERMISSIONS_FILE
-    perm_cnt = 0
     with PermFileWriter(perm_file) as perm_writer:
         for package in packages:
             perms = list(adb.read_user_set_permissions(package))
             perms = sorted(perms, key=lambda tup: tup[0])
             for perm, granted, manually_set in perms:
-                perm_writer.write_line(package, perm, granted)
-                perm_cnt += 1
+                perm_writer.write_permission(package, perm, granted)
     log.info(f'Rewritten: {perm_file}')
-    return perm_cnt
+    return perm_writer.cnt
 
 
 def restore_app_install_apks(package):
