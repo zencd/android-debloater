@@ -57,5 +57,6 @@ def parse_perm_file(f: Path):
                 grant = {'grant': True, 'revoke': False}.get(grant_str)
                 if grant is None:
                     log.warning(f'Cannot parse permission: {line}')
-                else:
-                    yield package, perm, grant
+                    continue
+                perm = normalize_perm(perm)
+                yield package, perm, grant

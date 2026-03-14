@@ -7,7 +7,7 @@ from src.db import app_meta_db
 from src.defs import *
 from src.defs import UAD_LOCAL
 from src.logs import log
-from src.perm_fmt import normalize_perm, parse_perm_file, PermFileWriter
+from src.perm_fmt import parse_perm_file, PermFileWriter
 from src.user_prefs import ResolutionList, Resolution, dump_resolutions
 from src.user_prefs import load_plain_resolutions
 from src.utils import ensure_dir, ensure_key, load_json_with_fallback, Counters
@@ -136,7 +136,6 @@ class RestoreAllAppsPermissions:
         return oks_fails
 
     def restore_app_permission(self, package, perm, grant: bool):
-        perm = normalize_perm(perm)
         return True \
             and adb.grant_or_revoke(package, perm, grant) \
             and adb.set_permission_flag(package, perm, 'user-set') \
