@@ -8,8 +8,7 @@ from src.defs import *
 from src.defs import UAD_LOCAL
 from src.logs import log
 from src.perm_fmt import parse_perm_file, PermFileWriter
-from src.user_prefs import ResolutionList, Resolution, dump_resolutions
-from src.user_prefs import load_plain_resolutions
+from src.user_prefs import ResolutionList, Resolution, UserPrefsWriter, UserPrefsReader
 from src.utils import ensure_dir, ensure_key, load_json_with_fallback, Counters
 
 
@@ -50,7 +49,7 @@ def list_apps_in_local_folder_ex():
 
 
 def update_package_prefs(package, action):
-    resolutions = load_plain_resolutions(USER_PREFS)
+    resolutions = UserPrefsReader().load_plain_resolutions(USER_PREFS)
     r = resolutions.get_resolution(package)
     if r:
         r.resolution = action
@@ -59,7 +58,7 @@ def update_package_prefs(package, action):
         comment = uad_package.get('description', '')
         r = Resolution(action, package, [], comment)
         resolutions.add(r)
-    dump_resolutions(USER_PREFS, resolutions)
+    UserPrefsWriter().dump_resolutions(USER_PREFS, resolutions)
 
 
 class BackupUserApps:
@@ -157,7 +156,7 @@ class ListPackages:
     FILTER_TO_STATUS = {'deviceUninstalled': 'uninstalled', 'deviceDisabled': 'disabled'}
 
     def perform(self, filter_: str):
-        resolutions = load_plain_resolutions(USER_PREFS)
+        resolutions = UserPrefsReader().load_plain_resolutions(USER_PREFS)
         if filter_ in {'keep', 'del', 'review'}:
             resolution = filter_
             packages_list = list(self.filter_packages_by_user_prefs(resolutions, resolution))
@@ -266,7 +265,7 @@ class DebloatPackages:
         return sorted(packages_to_delete)
 
     def list_packages_user_want_delete(self):
-        resolutions = load_plain_resolutions(USER_PREFS)
+        resolutions = UserPrefsReader().load_plain_resolutions(USER_PREFS)
         packages: list[str] = [r.package
                                for r in resolutions.items
                                if r.resolution == 'del']

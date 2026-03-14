@@ -39,75 +39,72 @@ class ResolutionList:
         self.__item_by_package[r.package] = r
 
 
-def parse_plain_resolution(line: str):
-    sharp = line.find('#')
-    comment = ''
-    if sharp >= 0:
-        comment = line[sharp + 1:].lstrip('# \t').rstrip()
-        line = line[0:sharp].strip()
-    if not line:
-        return None
-    words = re.split(r'\s+', line)
-    if len(words) < 2:
-        return None
-    resolution = words[0]
-    package = words[1]
-    unparsed = words[2:]
-    return Resolution(resolution=resolution, package=package, comment=comment, unparsed=unparsed)
+class UserPrefsReader:
+    def load_plain_resolutions(self, in_file: Path) -> ResolutionList:
+        res = ResolutionList()
+        if in_file.exists():
+            with open(in_file, encoding='utf-8') as fp:
+                for line in fp:
+                    if r := self._parse_plain_resolution(line):
+                        res.add(r)
+        return res
+
+    def _parse_plain_resolution(self, line: str):
+        sharp = line.find('#')
+        comment = ''
+        if sharp >= 0:
+            comment = line[sharp + 1:].lstrip('# \t').rstrip()
+            line = line[0:sharp].strip()
+        if not line:
+            return None
+        words = re.split(r'\s+', line)
+        if len(words) < 2:
+            return None
+        resolution = words[0]
+        package = words[1]
+        unparsed = words[2:]
+        return Resolution(resolution=resolution, package=package, comment=comment, unparsed=unparsed)
 
 
-def load_plain_resolutions(in_file: Path) -> ResolutionList:
-    res = ResolutionList()
-    if in_file.exists():
-        with open(in_file, encoding='utf-8') as fp:
-            for line in fp:
-                if r := parse_plain_resolution(line):
-                    res.add(r)
-    return res
+class UserPrefsWriter:
+    def dump_resolutions(self, out_file: Path, resolutions: ResolutionList):
+        # XXX using a temp file to prevent data loss on abort
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp_file:
+            ensure_dir(out_file.parent)
+            debloat, keep, review, others = [], [], [], []
+            for r in resolutions.items:
+                if r.resolution == 'new':
+                    continue
+                list_ = debloat if r.resolution == 'del' \
+                    else keep if r.resolution == 'keep' \
+                    else review if r.resolution == 'review' \
+                    else others
+                list_.append(r)
+            groups = [debloat, keep, review, others]
+            with open(temp_file.name, 'w', encoding='utf-8') as fp:
+                for group in groups:
+                    for r in sorted(group, key=lambda x: x.package):
+                        print(self._resolution_to_str(r), file=fp)
+        shutil.move(temp_file.name, out_file)
 
+    def _resolution_to_str(self, r: Resolution):
+        s = f'{r.resolution}  {r.package}'
+        for word in r.unparsed:
+            s += f'  {word}'
+        comment = self._convert_multi_line_description_to_one_line(r.comment)
+        if comment:
+            grid = 8  # to beautify comments
+            s += ' ' * (grid - (len(s) % grid))
+            s += f'# {comment}'
+        return s
 
-def resolution_to_str(r: Resolution):
-    s = f'{r.resolution}  {r.package}'
-    for word in r.unparsed:
-        s += f'  {word}'
-    comment = convert_multi_line_description_to_one_line(r.comment)
-    if comment:
-        grid = 8  # to beautify comments
-        s += ' ' * (grid - (len(s) % grid))
-        s += f'# {comment}'
-    return s
-
-
-def convert_multi_line_description_to_one_line(s: str):
-    lines = s.splitlines()
-    lines = map(str.strip, lines)
-    lines = filter(bool, lines)
-    res = ''
-    for line in lines:
-        if res:
-            res += ' ' if res[-1] == '.' else ' - '
-        res += line
-    return res
-
-
-def dump_resolutions(out_file: Path, resolutions: ResolutionList):
-    # XXX using a temp file to prevent data loss on abort
-    with tempfile.NamedTemporaryFile(suffix=".txt", delete=False) as temp_file:
-        ensure_dir(out_file.parent)
-        debloat, keep, review, others = [], [], [], []
-        for r in resolutions.items:
-            if r.resolution == 'new':
-                continue
-            list_ = debloat if r.resolution == 'del' \
-                else keep if r.resolution == 'keep' \
-                else review if r.resolution == 'review' \
-                else others
-            list_.append(r)
-        groups = [debloat, keep, review, others]
-        with open(temp_file.name, 'w', encoding='utf-8') as fp:
-            for group in groups:
-                for r in sorted(group, key=lambda x: x.package):
-                    print(resolution_to_str(r), file=fp)
-    shutil.move(temp_file.name, out_file)
-
-
+    def _convert_multi_line_description_to_one_line(self, s: str):
+        lines = s.splitlines()
+        lines = map(str.strip, lines)
+        lines = filter(bool, lines)
+        res = ''
+        for line in lines:
+            if res:
+                res += ' ' if res[-1] == '.' else ' - '
+            res += line
+        return res
