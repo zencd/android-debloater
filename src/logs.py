@@ -38,6 +38,8 @@ def create_main_logger():
         logger.addHandler(console_handler)
     return logger
 
+def audit(msg):
+    audit_logger.info(msg)
 
-audit = create_audit_logger()
+audit_logger = create_audit_logger()
 log = create_main_logger()

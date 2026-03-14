@@ -95,7 +95,7 @@ def uninstall_package(package):
     cmd = ['adb', 'shell', 'pm', 'uninstall', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
     if rc == 0:
-        audit.info(f'OK uninstall {package}')
+        audit(f'OK uninstall {package}')
     return rc, stdout, stderr
 
 
@@ -103,7 +103,7 @@ def install_existing_package(package):
     cmd = ['adb', 'shell', 'cmd', 'package', 'install-existing', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
     if rc == 0:
-        audit.info(f'OK install-existing {package}')
+        audit(f'OK install-existing {package}')
     return rc, stdout, stderr
 
 
@@ -111,7 +111,7 @@ def disable_package(package):
     cmd = ['adb', 'shell', 'pm', 'disable-user', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
     if rc == 0:
-        audit.info(f'OK disable {package}')
+        audit(f'OK disable {package}')
     return rc, stdout, stderr
 
 
@@ -119,7 +119,7 @@ def enable_package(package):
     cmd = ['adb', 'shell', 'pm', 'enable', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
     if rc == 0:
-        audit.info(f'OK enable {package}')
+        audit(f'OK enable {package}')
     return rc, stdout, stderr
 
 
