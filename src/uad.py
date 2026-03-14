@@ -11,9 +11,10 @@ from src.utils import load_json_with_fallback, load_json
 
 # module: community-updated list of bloatware, UAD NG
 
-def _validate_uad_json(file_path: Path) -> bool:
-    required_keys = {'list', 'description', 'dependencies', 'neededBy', 'labels', 'removal'}
-    data = load_json(file_path)
+def _validate_uad_json(data) -> bool:
+    if not isinstance(data, dict):
+        return False
+    required_keys = {'list', 'description', 'removal'}
     max_checks = 5
     cnt = 0
     for package, details in data.items():
