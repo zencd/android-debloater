@@ -39,6 +39,7 @@ def is_url(url):
 
 
 def ensure_key(data: dict, key: str, default_maker):
+    # todo dumb function?
     if key in data:
         return data[key]
     else:
@@ -50,7 +51,7 @@ def open_browser(url):
     webbrowser.open(url)
 
 
-def open_local_file_or_folder(path: str):
+def open_local_file_or_folder_in_external_program(path: str):
     if not os.path.exists(path):
         log.info(f'Missing path: {path}')
         return

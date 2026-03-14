@@ -14,7 +14,7 @@ from src.logs import log
 from src.services import backup_permissions, restore_apps, update_package_prefs, restore_app_install_apks, \
     list_apps_in_local_folder_ex, ListPackages, BackupUserApps, RestoreAllAppsPermissions, DebloatPackages
 from src.uad import download_uad_list
-from src.utils import open_browser, open_local_file_or_folder, is_url, Counters
+from src.utils import open_browser, open_local_file_or_folder_in_external_program, is_url, Counters
 
 # module: web ui
 
@@ -250,7 +250,7 @@ def serve_open_file(request, response):
     if path:
         path = str(path)
         if not is_url(path):
-            open_local_file_or_folder(path)
+            open_local_file_or_folder_in_external_program(path)
     return {'OK': True}
 
 

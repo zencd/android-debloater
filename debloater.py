@@ -7,9 +7,6 @@ import sys
 from pathlib import Path
 
 
-# todo embed resources
-# todo ERR_CONNECTION_REFUSED not toasted
-# todo verify uad_lists.json before rewriting it
 # todo recommended => safe
 # todo reload packages once at backend?
 # todo set PYTHONIOENCODING?
