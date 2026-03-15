@@ -48,15 +48,17 @@ def normalize_perm(perm: str):
 def parse_perm_file(f: Path):
     with open(f, encoding='utf-8') as fd:
         for line in fd:
+            line = re.sub(r'#.*', '', line)
             line = line.strip()
             words = re.split(r'\s+', line)
-            if len(words) >= 3:
-                package = words[0]
-                perm = words[1]
-                grant_str = words[2].lower()
-                grant = {'grant': True, 'revoke': False}.get(grant_str)
-                if grant is None:
-                    log.warning(f'Cannot parse permission: {line}')
-                    continue
-                perm = normalize_perm(perm)
-                yield package, perm, grant
+            if len(words) < 3:
+                continue
+            package = words[0]
+            perm = words[1]
+            grant_str = words[2].lower()
+            grant = {'grant': True, 'revoke': False}.get(grant_str)
+            if grant is None:
+                log.warning(f'Cannot parse permission: {line}')
+                continue
+            perm = normalize_perm(perm)
+            yield package, perm, grant

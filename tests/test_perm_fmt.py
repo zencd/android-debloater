@@ -12,32 +12,32 @@ class TestPermFileWriter(TestCase):
 
     def setUp(self):
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.file_path = Path(self.temp_dir.name) / "test_perm_file.txt"
+        self.file_path = Path(self.temp_dir.name) / 'test_perm_file.txt'
 
     def tearDown(self):
         self.temp_dir.cleanup()
 
     def test_write_permission(self):
         with PermFileWriter(self.file_path) as writer:
-            writer.write_permission("com.example", "android.permission.INTERNET", True)
-            writer.write_permission("com.example", "android.permission.CAMERA", False)
+            writer.write_permission('com.example', 'android.permission.INTERNET', True)
+            writer.write_permission('com.example', 'android.permission.CAMERA', False)
 
         with open(self.file_path, 'r', encoding='utf-8') as file:
             content = file.read()
-            self.assertEqual(content, "com.example  INTERNET  grant\ncom.example  CAMERA  revoke\n")
+            self.assertEqual(content, 'com.example  INTERNET  grant\ncom.example  CAMERA  revoke\n')
 
     def test_write_permission_with_shortened_perm(self):
         with PermFileWriter(self.file_path) as writer:
-            writer.write_permission("com.example", "android.permission.INTERNET", True)
-            writer.write_permission("com.example", "android.permission.CAMERA", False)
+            writer.write_permission('com.example', 'android.permission.INTERNET', True)
+            writer.write_permission('com.example', 'android.permission.CAMERA', False)
 
         with open(self.file_path, 'r', encoding='utf-8') as file:
             content = file.read()
-            self.assertEqual(content, "com.example  INTERNET  grant\ncom.example  CAMERA  revoke\n")
+            self.assertEqual(content, 'com.example  INTERNET  grant\ncom.example  CAMERA  revoke\n')
 
     def test_context_manager(self):
         with PermFileWriter(self.file_path) as writer:
-            writer.write_permission("com.example", "android.permission.INTERNET", True)
+            writer.write_permission('com.example', 'android.permission.INTERNET', True)
 
         self.assertTrue(self.file_path.exists())
 
@@ -47,8 +47,8 @@ class TestPermFileWriter(TestCase):
 
         try:
             with PermFileWriter(self.file_path) as writer:
-                writer.write_permission("com.example", "android.permission.INTERNET", True)
-                raise TestException("Test exception")
+                writer.write_permission('com.example', 'android.permission.INTERNET', True)
+                raise TestException('Test exception')
         except TestException:
             pass
 
@@ -58,30 +58,60 @@ class TestPermFileWriter(TestCase):
 class TestPermUtils(TestCase):
 
     def test_shorten_perm(self):
-        self.assertEqual(shorten_perm("android.permission.INTERNET"), "INTERNET")
-        self.assertEqual(shorten_perm("com.example.permission.CUSTOM"), "com.example.permission.CUSTOM")
-        self.assertEqual(shorten_perm("android.permission"), "android.permission")
+        self.assertEqual(shorten_perm('android.permission.INTERNET'), 'INTERNET')
+        self.assertEqual(shorten_perm('com.example.permission.CUSTOM'), 'com.example.permission.CUSTOM')
+        self.assertEqual(shorten_perm('android.permission'), 'android.permission')
 
     def test_normalize_perm(self):
-        self.assertEqual(normalize_perm("INTERNET"), "android.permission.INTERNET")
-        self.assertEqual(normalize_perm("com.example.permission.CUSTOM"), "com.example.permission.CUSTOM")
-        self.assertEqual(normalize_perm("android.permission.INTERNET"), "android.permission.INTERNET")
+        self.assertEqual(normalize_perm('INTERNET'), 'android.permission.INTERNET')
+        self.assertEqual(normalize_perm('com.example.permission.CUSTOM'), 'com.example.permission.CUSTOM')
+        self.assertEqual(normalize_perm('android.permission.INTERNET'), 'android.permission.INTERNET')
 
-    def test_parse_perm_file(self):
-        content = """
+
+class TestParsePermFile(TestCase):
+    def test_basic(self):
+        inp = '''
             com.example1  INTERNET  grant
-            com.example2  CAMERA  revoke
-            com.example3  LOCATION  grant"""
+            com.example2  android.permission.CAMERA  revoke
+            com.example3  com.example.permission.CUSTOM  grant
+            com.example4  INTERNET  unrecognized
+            com.example5  INTERNET
+            com.example6
 
+            '''
+        exp = [
+            ('com.example1', 'android.permission.INTERNET', True),
+            ('com.example2', 'android.permission.CAMERA', False),
+            ('com.example3', 'com.example.permission.CUSTOM', True),
+        ]
+        self.sub_test(inp, exp)
+
+    def test_comments(self):
+        inp = '''
+            com.example1  INTERNET  grant # comment
+            com.example2  INTERNET  grant# comment
+            com.example3  INTERNET  grant # comment # comment
+            # com.example4  INTERNET  grant
+            #
+            '''
+        exp = [
+            ('com.example1', 'android.permission.INTERNET', True),
+            ('com.example2', 'android.permission.INTERNET', True),
+            ('com.example3', 'android.permission.INTERNET', True),
+        ]
+        self.sub_test(inp, exp)
+
+    def test_no_line_end(self):
+        inp = 'com.example1 INTERNET grant'
+        exp = [
+            ('com.example1', 'android.permission.INTERNET', True),
+        ]
+        self.sub_test(inp, exp)
+
+    def sub_test(self, inp: str, exp: list):
         with tempfile.NamedTemporaryFile(delete=False, mode='w', encoding='utf-8') as temp_file:
-            temp_file.write(content)
+            temp_file.write(inp)
             temp_file_path = Path(temp_file.name)
-
         parsed_permissions = list(parse_perm_file(temp_file_path))
-        self.assertEqual(parsed_permissions, [
-            ("com.example1", "android.permission.INTERNET", True),
-            ("com.example2", "android.permission.CAMERA", False),
-            ("com.example3", "android.permission.LOCATION", True),
-        ])
-
+        self.assertEqual(exp, parsed_permissions)
         temp_file_path.unlink(missing_ok=True)
