@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 
 from src import adb
-from src.db import app_meta_db
+from src.db import APP_META_DB
 from src.defs import APK_DIR, USER_PREFS, ALL_PERMISSIONS_FILE
 from src.defs import UAD_LOCAL
 from src.logs import log
@@ -30,7 +30,7 @@ def list_apps_in_local_folder() -> set[str]:
 
 
 def list_apps_in_local_folder_ex():
-    pak_meta = (app_meta_db.data or dict()).get('packages') or dict()
+    pak_meta = (APP_META_DB.data or dict()).get('packages') or dict()
     local_packages = list_apps_in_local_folder()
     is_device_connected = True
     device_packages = []
@@ -238,7 +238,7 @@ class ListPackages:
         return ''
 
     def enrich_packages_with_known_meta(self, packages: list):
-        packages_meta = ensure_key(app_meta_db.data, 'packages', lambda: dict())
+        packages_meta = ensure_key(APP_META_DB.data, 'packages', lambda: dict())
         for pak_data in packages:
             pak_name = pak_data['package']
             pak_meta = packages_meta.get(pak_name) or dict()

@@ -10,7 +10,7 @@ import pyaxmlparser
 
 from src.defs import APP_ICON_DIR
 from src.utils import exec_, ensure_dir
-from src.db import app_meta_db
+from src.db import APP_META_DB
 from src.logs import log
 from src import adb
 
@@ -19,7 +19,7 @@ from src import adb
 class ExtractApkMeta:
 
     def __init__(self):
-        db = app_meta_db
+        db = APP_META_DB
         db.load()
         db.data = db.data if db.data else dict()
         app_meta_packages = db.data.get('packages')
@@ -46,7 +46,7 @@ class ExtractApkMeta:
         except Exception as e:
             log.error(f'pyaxmlparser failed parsing {local_apk_path}')  # pyaxmlparser is buggy
             return app_title, icon_data, icon_ext
-        app_title = self.resolve_apk_title(apk_info)
+        app_title = self.__resolve_apk_title(apk_info)
         if not app_title:
             log.warning(f'Failed resolving app title from apk {local_apk_path}, using {local_apk_path.stem}')
             app_title = local_apk_path.stem
@@ -90,45 +90,51 @@ class ExtractApkMeta:
         with open(icon_file, 'wb') as fp:
             fp.write(icon_data)
 
-    def resolve_apk_title(self, apk_info: pyaxmlparser.APK):
+    def __resolve_apk_title(self, apk_info: pyaxmlparser.APK):
         try:
             return apk_info.get_app_name()
         except:
             return ''
 
-    def extract(self, package: str):
+    def update_package_meta(self, package: str) -> bool:
+        pak_data = self.__extract_meta(package)
+        if not pak_data:
+            return False
+        self.app_meta_packages[package] = pak_data
+        self.db.dump()
+        return True
+
+    def __extract_meta(self, package: str) -> Optional[dict]:
         tmp_app_folder = None  # type: Optional[Path]
         try:
             apk_paths = adb.list_apk_paths_on_device(package)
             if not apk_paths:
-                return False
+                return None
             apk_paths = adb.list_apk_paths_on_device(package)
             if not apk_paths:
-                return False
+                return None
             apk_path = self.__find_one_remote_apk(apk_paths)
             if not apk_path:
-                return False
+                return None
             ok, tmp_app_folder = self.__pull_apk_into_temp_folder(apk_path)
             if not ok:
-                return False
+                return None
             local_apk_path = tmp_app_folder / os.path.basename(apk_path)
             app_icon_file_short = ''
             app_title, icon_data, icon_ext = self.__extract_meta_from_local_apk(local_apk_path)
             if not app_title:
-                return False
+                return None
             if icon_data and icon_ext:
                 app_icon_file_short = f'{package}{icon_ext}'
                 self.__persist_icon(icon_data, app_icon_file_short)
             pak_data = {'title': app_title}
             if app_icon_file_short:
                 pak_data['icon'] = app_icon_file_short
-            self.app_meta_packages[package] = pak_data
-            self.db.dump()
-            return True
+            return pak_data
         except Exception as e:
             log.error(f'Failed reading icon for {package}: {e}')
             traceback.print_exc()
-            return False
+            return None
         finally:
             if tmp_app_folder and tmp_app_folder.exists():
                 shutil.rmtree(tmp_app_folder)

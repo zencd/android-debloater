@@ -38,4 +38,4 @@ class JsonDB:
         os.replace(tmp, self.path)
 
 
-app_meta_db = JsonDB(APP_META_PATH)
+APP_META_DB = JsonDB(APP_META_PATH)

@@ -201,7 +201,7 @@ def serve_read_device_apps_meta(request, response):
     oks_fails = Counters()
     for package in adb.list_device_all_packages():
         if package not in extractor.app_meta_packages:
-            ok = extractor.extract(package)
+            ok = extractor.update_package_meta(package)
             oks_fails.increment_bool(ok)
     response.content_type = CT_JSON
     return {'status': 'OK', 'oks': oks_fails.oks, 'fails': oks_fails.fails}
