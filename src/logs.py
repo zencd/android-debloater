@@ -1,6 +1,6 @@
 import logging
 
-from src.defs import *
+from src.defs import AUDIT_LOG_FILE, DEBUG, MAIN_LOG_FILE
 
 
 def create_audit_logger():

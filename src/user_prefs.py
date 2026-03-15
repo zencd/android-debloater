@@ -2,8 +2,8 @@ import dataclasses
 import re
 import shutil
 import tempfile
+from pathlib import Path
 
-from src.defs import *
 from src.utils import ensure_dir
 
 

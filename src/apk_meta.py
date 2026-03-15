@@ -3,12 +3,13 @@ import os.path
 import shutil
 import tempfile
 import traceback
+from pathlib import Path
 from typing import Optional
 
 import pyaxmlparser
 
+from src.defs import APP_ICON_DIR
 from src.utils import exec_, ensure_dir
-from src.defs import *
 from src.db import app_meta_db
 from src.logs import log
 from src import adb

@@ -1,11 +1,8 @@
-import os
 import tempfile
 from pathlib import Path
 from unittest import TestCase
-from unittest.mock import patch
 
 from src.perm_fmt import PermFileWriter, shorten_perm, normalize_perm, parse_perm_file
-from src.logs import log
 
 
 class TestPermFileWriter(TestCase):

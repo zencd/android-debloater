@@ -6,7 +6,7 @@ from pathlib import Path
 
 from src.defs import UAD_LOCAL, UAD_URL
 from src.logs import log
-from src.utils import load_json_with_fallback, load_json
+from src.utils import load_json_with_fallback
 
 
 # module: community-updated list of bloatware, UAD NG

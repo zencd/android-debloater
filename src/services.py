@@ -1,10 +1,11 @@
 import os.path
 import shutil
 import tempfile
+from pathlib import Path
 
 from src import adb
 from src.db import app_meta_db
-from src.defs import *
+from src.defs import APK_DIR, USER_PREFS, ALL_PERMISSIONS_FILE
 from src.defs import UAD_LOCAL
 from src.logs import log
 from src.perm_fmt import parse_perm_file, PermFileWriter

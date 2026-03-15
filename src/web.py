@@ -9,7 +9,8 @@ from urllib.parse import urlparse, parse_qs
 
 from src import adb, AbortException
 from src.apk_meta import ExtractApkMeta
-from src.defs import *
+from src.defs import APK_DIR, ALL_PERMISSIONS_FILE, USER_PREFS, UAD_LOCAL, UAD_URL, AUDIT_LOG_FILE, APP_ICON_DIR, \
+    APP_REPO, DEBUG, CT_JSON, PROJECT_DIR, HOST, PORT
 from src.logs import log
 from src.services import backup_permissions, restore_apps, update_package_prefs, restore_app_install_apks, \
     list_apps_in_local_folder_ex, ListPackages, BackupUserApps, RestoreAllAppsPermissions, DebloatPackages
