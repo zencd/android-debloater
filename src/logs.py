@@ -41,5 +41,9 @@ def create_main_logger():
 def audit(msg):
     audit_logger.info(msg)
 
+def audit_if(ok: bool, msg):
+    if ok:
+        audit_logger.info(msg)
+
 audit_logger = create_audit_logger()
 log = create_main_logger()

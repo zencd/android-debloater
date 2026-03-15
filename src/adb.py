@@ -3,7 +3,7 @@ import shlex
 from functools import cache
 
 from src import AbortException
-from src.logs import audit, log
+from src.logs import log, audit_if
 from src.utils import exec_, extract_block
 
 # module: abstract adb utils
@@ -94,32 +94,28 @@ def dumpsys_package(package):
 def uninstall_package(package):
     cmd = ['adb', 'shell', 'pm', 'uninstall', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
-    if rc == 0:
-        audit(f'OK uninstall {package}')
+    audit_if(rc == 0, f'OK uninstall {package}')
     return rc, stdout, stderr
 
 
 def install_existing_package(package):
     cmd = ['adb', 'shell', 'cmd', 'package', 'install-existing', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
-    if rc == 0:
-        audit(f'OK install-existing {package}')
+    audit_if(rc == 0, f'OK install-existing {package}')
     return rc, stdout, stderr
 
 
 def disable_package(package):
     cmd = ['adb', 'shell', 'pm', 'disable-user', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
-    if rc == 0:
-        audit(f'OK disable {package}')
+    audit_if(rc == 0, f'OK disable {package}')
     return rc, stdout, stderr
 
 
 def enable_package(package):
     cmd = ['adb', 'shell', 'pm', 'enable', '--user', '0', package]
     rc, stdout, stderr = exec_(cmd)
-    if rc == 0:
-        audit(f'OK enable {package}')
+    audit_if(rc == 0, f'OK enable {package}')
     return rc, stdout, stderr
 
 
