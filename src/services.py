@@ -4,13 +4,13 @@ import tempfile
 from pathlib import Path
 
 from src import adb
-from src.db import APP_META_DB
+from src.db import read_app_meta_db
 from src.defs import APK_DIR, USER_PREFS, ALL_PERMISSIONS_FILE
 from src.defs import UAD_LOCAL
 from src.logs import log
 from src.perm_fmt import parse_perm_file, PermFileWriter
 from src.user_prefs import ResolutionList, Resolution, UserPrefsWriter, UserPrefsReader
-from src.utils import ensure_dir, ensure_key, load_json_with_fallback, Counters
+from src.utils import ensure_dir, load_json_with_fallback, Counters
 
 
 # module: business logics
@@ -30,7 +30,7 @@ def list_apps_in_local_folder() -> set[str]:
 
 
 def list_apps_in_local_folder_ex():
-    pak_meta = (APP_META_DB.data or dict()).get('packages') or dict()
+    pak_meta: dict = read_app_meta_db().data['packages']
     local_packages = list_apps_in_local_folder()
     is_device_connected = True
     device_packages = []
@@ -238,7 +238,7 @@ class ListPackages:
         return ''
 
     def enrich_packages_with_known_meta(self, packages: list):
-        packages_meta = ensure_key(APP_META_DB.data, 'packages', lambda: dict())
+        packages_meta = read_app_meta_db().data['packages']
         for pak_data in packages:
             pak_name = pak_data['package']
             pak_meta = packages_meta.get(pak_name) or dict()

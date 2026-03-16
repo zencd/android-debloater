@@ -10,7 +10,7 @@ import pyaxmlparser
 
 from src.defs import APP_ICON_DIR
 from src.utils import exec_, ensure_dir
-from src.db import APP_META_DB
+from src.db import read_app_meta_db
 from src.logs import log
 from src import adb
 
@@ -19,15 +19,7 @@ from src import adb
 class ExtractApkMeta:
 
     def __init__(self):
-        db = APP_META_DB
-        db.load()
-        db.data = db.data if db.data else dict()
-        app_meta_packages = db.data.get('packages')
-        if not app_meta_packages:
-            app_meta_packages = dict()
-            db.data['packages'] = app_meta_packages
-        self.db = db
-        self.app_meta_packages = app_meta_packages
+        self.db = read_app_meta_db()
 
     def __find_one_remote_apk(self, apk_paths):
         apk_path = ''
@@ -100,7 +92,7 @@ class ExtractApkMeta:
         pak_data = self.__extract_meta(package)
         if not pak_data:
             return False
-        self.app_meta_packages[package] = pak_data
+        self.db.data['packages'][package] = pak_data
         self.db.dump()
         return True
 

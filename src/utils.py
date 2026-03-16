@@ -38,15 +38,6 @@ def is_url(url):
     return url.startswith('https:') or url.startswith('http:')
 
 
-def ensure_key(data: dict, key: str, default_maker):
-    # todo dumb function?
-    if key in data:
-        return data[key]
-    else:
-        data[key] = default_maker()
-        return data[key]
-
-
 def open_browser(url):
     webbrowser.open(url)
 
@@ -103,6 +94,7 @@ def load_json_with_fallback(path, fallback):
         with open(path, encoding='utf-8') as fd:
             return json.load(fd)
     return fallback
+
 
 def load_json(path):
     with open(path, encoding='utf-8') as fd:
